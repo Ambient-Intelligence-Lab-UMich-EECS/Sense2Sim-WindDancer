@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- the tab's icon: the pictures first (icon-64.png, icon-180.png: the S drawn from the SVG, for a browser that takes no SVG
+     icon, Safari, and a home screen's shortcut), the SVG last, which a browser that takes it uses -->
+<link rel="icon" type="image/png" sizes="64x64" href="icon-64.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' gradientUnits='userSpaceOnUse' x1='14' y1='10' x2='50' y2='54'%3E%3Cstop offset='0' stop-color='#d9f272'/%3E%3Cstop offset='.38' stop-color='#6b98ff'/%3E%3Cstop offset='.68' stop-color='#c7a2ff'/%3E%3Cstop offset='1' stop-color='#ff8a5b'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='#0d0f13'/%3E%3Cpath d='M44 21C44 9.5 20 9.5 20 22C20 34 44 30 44 42C44 54.5 20 54.5 20 43' fill='none' stroke='url%28#g%29' stroke-width='8.5' stroke-linecap='round'/%3E%3C/svg%3E">
+<!-- page:begin -->
+<title>Sense2Sim · WindDancer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<!-- the way in: a paper drawn as the page loads (entrance.js), after the tab's icon and title, before anything drawn; intro.js says when the scene is ready -->
+<script src="entrance.js"></script>
+<script>
+// no flash of the page's plain layout before the scene (the owner, 2026-11-22: “第一页…会快速闪一下这一页”): hidden until
+// intro.js has the scene (or knows it has none); at most 2.5 s
+document.documentElement.classList.add("boot"); setTimeout(function () { document.documentElement.classList.remove("boot"); }, 2500);
+</script>
+<style>
+html.boot main, html.boot .madeby { visibility: hidden; }
+/* Layout: one pinned stage under a slim bar; the page's scroll drives one scene: three first pages,
+   the wall of papers, the Sensing Universe, the Sensing World as a point cloud, then two entrances side by side.
+   Words keep to a band of their own; the scene is framed clear of it. One look: the night sky. */
+:root {
+  color-scheme: dark;
+  --bg: #000000; --ink: #f5f5f7; --ink-2: #a1a1a6; --ink-3: #6e6e73;
+  --line: rgba(255, 255, 255, 0.16); --line-2: rgba(255, 255, 255, 0.32); --card: rgba(255, 255, 255, 0.035);
+  --link: #2997ff;
+  --acoustic: #d9f272; --rf: #6b98ff; --optical: #ff8a5b; --electric: #c7a2ff; --magnetic: #f0c674; --mechanical: #aab5c7;
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "Segoe UI", Inter, Roboto, Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  --navh: calc(48px + env(safe-area-inset-top, 0px));
+  --gutter-l: max(24px, env(safe-area-inset-left, 0px)); --gutter-r: max(24px, env(safe-area-inset-right, 0px));
+}
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.47 var(--sans); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+a { color: inherit; text-decoration: none; }
+a:focus-visible { outline: 2px solid var(--link); outline-offset: 4px; border-radius: 6px; }
+
+/* the bar: solid, so nothing of the scene is ever under its words */
+.nav { position: fixed; inset: 0 0 auto 0; z-index: 5; height: var(--navh); padding-top: env(safe-area-inset-top, 0px);
+  padding-left: var(--gutter-l); padding-right: var(--gutter-r);
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; background: var(--bg); border-bottom: 1px solid var(--line); }
+.nav .brand { font-weight: 600; font-size: 22px; letter-spacing: -0.015em; }
+.nav nav { display: flex; gap: clamp(14px, 3vw, 36px); font-size: 17px; color: var(--ink-2); white-space: nowrap; }
+.nav nav a:hover { color: var(--ink); }
+
+/* without the scene (no WebGL, or less motion asked for): the words and the two entrances, in the page's flow */
+.track { padding-top: var(--navh); }
+.stage { position: relative; padding: clamp(36px, 8vh, 96px) 0 48px; }
+#gl, #labels { display: none; }
+.cap { margin: 0 auto; padding-left: var(--gutter-l); padding-right: var(--gutter-r); text-align: center; }
+.cap h1, .cap h2 { margin: 0 auto; font-weight: 600; letter-spacing: -0.03em; line-height: 1.06; text-wrap: balance;
+  background: linear-gradient(180deg, #ffffff 30%, #b9bcc6 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.cap h1 { font-size: clamp(26px, min(3.8vw, 6.4vh), 58px); max-width: 24em; line-height: 1.12; letter-spacing: -0.022em; }
+.cap h2 { font-size: clamp(42px, min(6vw, 9.6vh), 92px); }
+.cap p { margin: 12px auto 0; max-width: 40ch; color: var(--ink-2); font-size: clamp(19px, min(2vw, 3.4vh), 30px); line-height: 1.34; text-wrap: balance; }
+/* the name is the page's largest word; the line under it says what it does */
+.cap .eyebrow { margin: 0 0 8px; max-width: none; font-size: clamp(54px, min(7vw, 11.5vh), 112px); font-weight: 700; letter-spacing: -0.035em; line-height: 1.08;
+  background: linear-gradient(90deg, var(--acoustic), var(--rf) 38%, var(--electric) 68%, var(--optical)); -webkit-background-clip: text; background-clip: text; color: transparent; display: inline-block; }
+.cap .cue { display: none; }
+#cap-uni, #cap-assets, #cap-world { display: none; }
+
+.gates { margin-top: clamp(36px, 7vh, 72px); padding-left: var(--gutter-l); padding-right: var(--gutter-r); }
+.gate-row { display: flex; gap: clamp(16px, 2.4vw, 32px); width: min(1480px, 100%); margin: 0 auto; }
+.gate { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 18px; }
+.gate-media { display: block; position: relative; overflow: hidden; width: 100%; aspect-ratio: 16 / 10; max-height: 46vh; border: 1px solid var(--line); border-radius: 28px; background: var(--card);
+  transition: border-color 0.35s ease, background-color 0.35s ease; }
+/* (without the scene the entrances are not left empty: the galaxies as soft lights, the world as a field of points) */
+.gate-media::before { content: ""; position: absolute; inset: 0; }
+#gate-uni .gate-media::before { background:
+  radial-gradient(13% 20% at 59% 32%, rgba(107, 152, 255, 0.6), transparent), radial-gradient(9% 14% at 85% 50%, rgba(217, 242, 114, 0.5), transparent),
+  radial-gradient(8% 13% at 73% 73%, rgba(255, 138, 91, 0.55), transparent), radial-gradient(6% 10% at 36% 77%, rgba(199, 162, 255, 0.55), transparent),
+  radial-gradient(5.5% 9% at 11% 59%, rgba(170, 181, 199, 0.5), transparent), radial-gradient(5% 8% at 23% 37%, rgba(240, 198, 116, 0.55), transparent),
+  radial-gradient(2.5% 4% at 48% 54%, rgba(255, 255, 255, 0.5), transparent); }
+#gate-world .gate-media::before { background: radial-gradient(circle, rgba(150, 196, 255, 0.8) 1px, transparent 1.7px) 0 0 / 11px 11px;
+  -webkit-mask-image: radial-gradient(40% 30% at 50% 56%, #000 55%, transparent 100%); mask-image: radial-gradient(40% 30% at 50% 56%, #000 55%, transparent 100%); }
+.gate:hover .gate-media, .gate:focus-visible .gate-media { border-color: var(--line-2); background: rgba(255, 255, 255, 0.06); }
+.gate-text { display: grid; gap: 4px; padding: 0 6px; }
+.gate-text strong { font-size: clamp(28px, 3.3vw, 58px); font-weight: 600; letter-spacing: -0.025em; line-height: 1.12; }
+.gate-text span { color: var(--ink-2); font-size: clamp(17px, 1.7vw, 28px); line-height: 1.36; }
+/* (the whole entrance is the link: no "Enter" line under it) */
+.gate-text strong { transition: color 0.3s ease; }
+.gate:hover .gate-text strong, .gate:focus-visible .gate-text strong { color: var(--link); }
+.madeby { margin: 28px auto 0; max-width: 70ch; text-align: center; color: var(--ink-3); font-size: clamp(12.5px, 1.05vw, 17px); line-height: 1.4; }
+
+/* with the scene: the stage pinned, the page's length is the story's */
+.live .track { height: 3000vh; }
+.live .stage { position: sticky; top: var(--navh); height: calc(100vh - var(--navh)); height: calc(100dvh - var(--navh)); padding: 0; overflow: hidden; }
+.live #gl { display: block; position: absolute; inset: 0; width: 100%; height: 100%; }
+.live #labels { display: block; position: absolute; inset: 0; pointer-events: none; }
+.live .cap { position: absolute; left: 0; right: 0; top: clamp(18px, 4.4vh, 52px); opacity: 0; visibility: hidden; will-change: opacity, transform; pointer-events: none; }
+.live #cap-uni, .live #cap-assets, .live #cap-world { display: block; }
+.live .cap .cue { display: inline-flex; align-items: center; gap: 9px; margin-top: 16px; color: var(--ink-3); font-size: 16px; letter-spacing: 0.02em; }
+.live .cap .cue svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; animation: nudge 1.9s ease-in-out infinite; }
+@keyframes nudge { 0%, 100% { transform: translateY(-2px); opacity: 0.55; } 50% { transform: translateY(3px); opacity: 1; } }
+.live .gates { position: absolute; inset: 0; margin: 0; display: flex; flex-direction: column; justify-content: center; opacity: 0; visibility: hidden; }
+.live .gate-media { background: transparent; }
+.live .gate-media::before { display: none; }
+.live .gate-text { will-change: transform, opacity; opacity: 0; }
+.live .madeby { position: absolute; left: var(--gutter-l); right: var(--gutter-r); bottom: max(14px, env(safe-area-inset-bottom, 0px)); margin: 0 auto; }
+
+/* the galaxies' names, and a few papers' names at a time by their stars, drawn in the scene's own place */
+.glabel, .slabel { position: absolute; left: 0; top: 0; white-space: nowrap; will-change: transform, opacity; opacity: 0; }
+.glabel { font: 600 clamp(15px, 1.3vw, 23px)/1 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; transform-origin: 0 0; }
+.alabel { position: absolute; left: 0; top: 0; white-space: nowrap; will-change: transform, opacity; opacity: 0; font: 600 clamp(12px, 1vw, 17px)/1 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-2); text-shadow: 0 0 8px #000, 0 0 2px #000; }
+.slabel.me { color: var(--acoustic); font-weight: 700; text-shadow: 0 0 10px #000, 0 0 3px #000; }
+.slabel { font: 600 clamp(15px, 1.2vw, 21px)/1.1 var(--sans); letter-spacing: -0.01em; color: var(--ink); text-shadow: 0 0 6px #000, 0 0 2px #000; }
+
+/* ---- the opening of one simulation: how it works, the authors' check, the way in (Sense2Sim kit, opening mock) */
+.navgo { color: var(--ink) !important; font-weight: 600; }
+.cap .thispaper { margin-top: 20px; max-width: 60ch; font-size: clamp(18px, min(1.9vw, 3.2vh), 30px); color: var(--ink-2); }
+.cap .thispaper b { color: var(--acoustic); font-weight: 600; }
+.how .howhead { text-align: center; margin: 0 auto clamp(10px, 2.4vh, 28px); padding: 0 var(--gutter-r) 0 var(--gutter-l); }
+.how .howeye { margin: 0; font: 600 clamp(14px, 1.2vw, 19px)/1 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--ink-3); }
+.how .howhead h2 { margin: 10px 0 0; font-weight: 600; letter-spacing: -0.03em; font-size: clamp(30px, min(4.2vw, 6.6vh), 68px); line-height: 1.08;
+  background: linear-gradient(180deg, #ffffff 30%, #b9bcc6 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.howgrid { position: relative; display: grid; width: min(1560px, 100%); margin: 0 auto; gap: clamp(12px, 1.6vw, 26px) clamp(18px, 3vw, 54px);
+  grid-template-columns: 0.72fr 1.15fr 1fr 1.1fr; grid-template-rows: auto auto; grid-template-areas: "paper uni assets sim" "paper uni world sim"; align-items: center; }
+.howflow { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.hnode { position: relative; display: flex; flex-direction: column; gap: 10px; min-width: 0; transition: opacity .5s ease, filter .5s ease; }
+.hnode[data-n="0"] { grid-area: paper; } #gate-uni { grid-area: uni; } #node-assets { grid-area: assets; } #gate-world { grid-area: world; } #node-sim { grid-area: sim; }
+.how .gate-media, .hmedia { display: block; position: relative; overflow: hidden; width: 100%; border: 1px solid var(--line); border-radius: 22px; background: rgba(255,255,255,.02); }
+#gate-uni .gate-media { aspect-ratio: 4 / 5; max-height: 44vh; }
+#node-assets .hmedia, #gate-world .gate-media { aspect-ratio: 16 / 9; max-height: 18vh; }
+.hsim .hmedia { aspect-ratio: 16 / 10; max-height: 30vh; }
+.hpaper .hmedia { aspect-ratio: 0.773; max-height: 30vh; background: #f8f8f4; border-color: transparent; }
+.hsheet { position: absolute; inset: 9% 10%; display: flex; flex-direction: column; gap: 6px; }
+.hsheet b { color: #16181c; font: 700 clamp(10px, .82vw, 14px)/1.2 "Helvetica Neue", Helvetica, Arial, sans-serif; text-align: center; margin-bottom: 8px; }
+.hsheet i { display: block; height: 5px; border-radius: 2px; background: #c9cbd0; } .hsheet i:nth-child(3) { width: 80%; } .hsheet i:nth-child(5) { width: 64%; }
+.hsimpic img { display: block; width: 100%; height: 100%; object-fit: cover; opacity: .92; }
+.hassets img { position: absolute; top: 0; left: 0; height: 100%; width: auto; max-width: none; animation: drift 38s linear infinite alternate; }
+@keyframes drift { from { transform: translateX(0); } to { transform: translateX(calc(-100% + 100cqw)); } }
+.hassets { container-type: inline-size; background: #e9ebee !important; }
+.hassets .hcount { position: absolute; right: 10px; bottom: 10px; font: 700 clamp(13px, 1vw, 17px)/1 var(--sans); color: #ffd200; background: #10264d; padding: 6px 11px; border-radius: 999px; }
+@media (prefers-reduced-motion: reduce) { .hassets img { animation: none; } }
+.hassets .dev * { fill: none; stroke: #b9c8ff; stroke-width: 2; } .hassets .dev .scr { stroke: #6b98ff; }
+.hassets .dev { filter: drop-shadow(0 0 6px rgba(107,152,255,.55)); }
+.htext { display: grid; gap: 2px; padding: 0 4px; }
+.htext em { font: 600 clamp(14px, 1.05vw, 18px)/1 var(--mono); font-style: normal; letter-spacing: .12em; color: var(--ink-3); }
+.htext strong { font-size: clamp(22px, 2.05vw, 38px); font-weight: 600; letter-spacing: -0.02em; line-height: 1.15; }
+.htext > span { color: var(--ink-2); font-size: clamp(16px, 1.3vw, 22px); line-height: 1.35; }
+.hsim .htext strong { background: linear-gradient(90deg, var(--acoustic), var(--rf)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+a.hnode { cursor: pointer; } a.hnode:hover .hmedia, a.hnode:hover .gate-media, a.hnode:focus-visible .hmedia, a.hnode:focus-visible .gate-media { border-color: var(--line-2); box-shadow: 0 0 0 1px rgba(255,255,255,.12), 0 0 44px rgba(159,193,255,.3); }
+a.hnode .htext strong::after { content: " ›"; color: var(--ink-3); } a.hnode:hover .htext strong { color: var(--link); }
+.how { pointer-events: auto; }
+/* the node lit, or pointed at: framed in the S's colours, turning (as the simulator's own cards: js/author.js, .auintro) */
+@property --hang { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+.hnode .hmedia::after, .hnode .gate-media::after { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 3px; pointer-events: none; opacity: 0; transition: opacity .35s ease;
+  background: conic-gradient(from var(--hang), #d9f272, #6b98ff, #c7a2ff, #ff8a5b, #d9f272);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation: hturn 3.2s linear infinite; }
+.hnode.lit .hmedia::after, .hnode.lit .gate-media::after, a.hnode:hover .hmedia::after, a.hnode:hover .gate-media::after, a.hnode:focus-visible .hmedia::after, a.hnode:focus-visible .gate-media::after { opacity: 1; }
+@keyframes hturn { to { --hang: 360deg; } }
+@media (prefers-reduced-motion: reduce) { .hnode .hmedia::after, .hnode .gate-media::after { animation: none; } }
+.hnode.dim { opacity: .28; filter: saturate(.4); } .hnode.lit .hmedia, .hnode.lit .gate-media { border-color: var(--line-2); box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 0 44px rgba(107,152,255,.22); }
+.howflow path.wire { fill: none; stroke: rgba(255,255,255,.22); stroke-width: 1.4; }
+.howflow path.wire.on { stroke: url(#wireg); stroke-width: 2; }
+.howflow circle.spark { fill: #fff; filter: drop-shadow(0 0 5px #9fc1ff); }
+/* the authors' check and the way in: words over the night, the scene dimmed under them */
+.live #cap-badge, .live #cap-go { top: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+.capbadge p, .capgo p { font-size: clamp(18px, min(1.7vw, 3vh), 26px) !important; max-width: 52ch !important; }
+.capbadge h2, .capgo h2 { font-size: clamp(38px, min(5vw, 8vh), 80px) !important; }
+/* (text drawn by its gradient is cut at the line box: room under the descenders, g and p) */
+.cap h1, .cap h2, .how .howhead h2 { line-height: 1.16 !important; padding-bottom: .1em; }
+.capbadge .medal canvas { display: block; width: 100% !important; height: 100% !important; }
+.capbadge .medal { width: clamp(220px, 34vh, 380px); height: clamp(220px, 34vh, 380px); pointer-events: auto; position: relative; margin: 0 auto 10px; filter: drop-shadow(0 0 40px rgba(107,152,255,.4)) drop-shadow(0 0 14px rgba(217,242,114,.25)); }
+.capbadge .badgeeye { margin: 0 0 10px !important; font: 600 clamp(15px, 1.2vw, 19px)/1 var(--mono) !important; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-3) !important; }
+.capbadge .scores { display: flex; justify-content: center; gap: clamp(18px, 4vw, 64px); margin: 22px auto 6px; }
+.capbadge .scores > div { display: grid; grid-template-columns: auto auto; align-items: baseline; gap: 2px 8px; min-width: 180px; text-align: left; }
+.capbadge .scores span { grid-column: 1 / -1; font: 600 clamp(14px, 1.1vw, 18px)/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
+.capbadge .scores b { font-size: clamp(54px, 6vw, 92px); font-weight: 700; letter-spacing: -0.03em; line-height: 1; } .capbadge .scores small { color: var(--ink-3); font-size: 18px; }
+.capbadge .scores i { grid-column: 1 / -1; display: block; height: 6px; border-radius: 3px; background: rgba(255,255,255,.12); position: relative; overflow: hidden; margin-top: 8px; }
+.capbadge .scores i::after { content: ""; position: absolute; inset: 0 auto 0 0; width: var(--w); background: var(--c); border-radius: 3px; }
+.capbadge .mocknote { font-size: 15px !important; color: #ff8a5b !important; }
+.capgo .gobtn { display: inline-flex; align-items: center; gap: 10px; margin-top: 26px; padding: 16px 30px; border-radius: 999px; font-size: clamp(18px, 1.5vw, 24px); font-weight: 600; color: #000;
+  background: linear-gradient(90deg, var(--acoustic), #9fc1ff); box-shadow: 0 0 40px rgba(159,193,255,.35); pointer-events: auto; }
+.capgo .gomade { position: static !important; margin-top: 28px !important; font-size: 14px !important; color: var(--ink-3) !important; }
+.capgo .gobtn svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; }
+.live .capgo { pointer-events: none; } .live .capgo .gobtn { pointer-events: auto; }
+@media (max-width: 900px) { .howgrid { grid-template-columns: 1fr 1fr; grid-template-areas: "paper uni" "assets world" "sim sim"; } .howflow { display: none; } }
+
+@media (max-width: 700px) {
+  .gate-row { flex-direction: column; gap: 18px; }
+  .gate { gap: 10px; }
+  .gate-media { aspect-ratio: 16 / 9; max-height: 22vh; border-radius: 20px; }
+  .gate-text { gap: 2px; }
+  .nav .brand { font-size: 17.5px; }
+  .nav nav { font-size: 13.5px; gap: 12px; }
+  .glabel { font-size: 13px; letter-spacing: 0.1em; }
+  .slabel { font-size: 13.5px; }
+}
+@media (prefers-reduced-motion: reduce) { .live .cap .cue svg { animation: none; } }
+</style>
+
+<header class="nav">
+  <a class="brand" href="#top" id="brand">Sense2Sim</a>
+  <!-- (the entrances open a tab of their own: this page stays where the reader left it; AmI, 2026-11-18) -->
+  <nav aria-label="Entrances">
+    <a href="https://ambient-intelligence-lab-umich-eecs.github.io/Sense2Sim_Universe/pages/universe/index.html" target="_blank" rel="noopener">Sensing Universe</a>
+    <a href="https://ambient-intelligence-lab-umich-eecs.github.io/Sense2Sim_Assets/" target="_blank" rel="noopener">3D Assets</a>
+    <a href="https://ambient-intelligence-lab-umich-eecs.github.io/Sense2Sim_Universe/pages/world/index.html#home" target="_blank" rel="noopener">Sensing World</a>
+    <a href="../#who" class="navgo" data-in>Start WindDancer ›</a>
+  </nav>
+</header>
+
+<main class="track" id="track">
+  <div class="stage" id="stage">
+    <canvas id="gl" aria-hidden="true"></canvas>
+
+    <section class="cap" id="cap-hero">
+      <p class="eyebrow">Sense2Sim</p>
+      <h1>Turning Ubiquitous Sensing Research Into Interactive Physical Models</h1>
+      <p class="thispaper">This one: <b>WindDancer: Understanding Acoustic Sensing under Ambient Airflow</b> · WindDancer, ACM IMWUT 2025</p>
+      <span class="cue">Scroll <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4l4 4 4-4"/></svg></span>
+    </section>
+
+    <section class="cap" id="cap-uni">
+      <h2>Sensing Universe</h2>
+      <p>Every paper is a star, gathered by how it senses. WindDancer is one of them.</p>
+    </section>
+
+    <section class="cap" id="cap-assets">
+      <h2>3D Assets</h2>
+      <p>The things inside the papers, rebuilt as 3D models. The Sensing World is built from them.</p>
+    </section>
+
+    <section class="cap" id="cap-world">
+      <h2>Sensing World</h2>
+      <p>Papers placed in everyday spaces, running on the devices already there.</p>
+    </section>
+
+    <div id="labels" aria-hidden="true"></div>
+
+    <section class="gates how" id="gates" aria-label="How Sense2Sim works">
+      <div class="howhead"><p class="howeye">How Sense2Sim works</p><h2>From the whole field, to one paper you can run</h2></div>
+      <div class="howgrid">
+        <svg class="howflow" id="howflow" aria-hidden="true"></svg>
+        <div class="hnode hpaper" data-n="0"><span class="hmedia hpaperpic"><span class="hsheet"><b>WindDancer: Understanding Acoustic Sensing under Ambient Airflow</b><i></i><i></i><i></i><i></i><i></i></span></span>
+          <span class="htext"><em>The paper goes in</em><strong>WindDancer</strong><span>its text, its figures and its talk</span></span></div>
+        <a class="gate hnode" id="gate-uni" data-n="1" href="https://ambient-intelligence-lab-umich-eecs.github.io/Sense2Sim_Universe/pages/universe/index.html" target="_blank" rel="noopener">
+          <span class="gate-media"></span>
+          <span class="gate-text htext"><em>1</em><strong>Sensing Universe</strong><span>The paper placed among its related research.</span></span>
+        </a>
+        <a class="hnode" id="node-assets" data-n="2" href="https://ambient-intelligence-lab-umich-eecs.github.io/Sense2Sim_Assets/" target="_blank" rel="noopener"><span class="hmedia hassets"><img src="../about/assets.jpg" alt=""></span>
+          <span class="htext"><em>2</em><strong>Sensing 3D Assets</strong><span>Reusable 3D models of devices, sensors and people, WindDancer's own among them.</span></span></a>
+        <a class="gate hnode" id="gate-world" data-n="3" href="https://ambient-intelligence-lab-umich-eecs.github.io/Sense2Sim_Universe/pages/world/index.html#home" target="_blank" rel="noopener">
+          <span class="gate-media"></span>
+          <span class="gate-text htext"><em>3</em><strong>Sensing World</strong><span>The places such papers work in, built with those models.</span></span>
+        </a>
+        <a class="hnode hsim" id="node-sim" data-n="4" href="../#who" data-in><span class="hmedia hsimpic"><img src="../thumbs/use.jpg" alt=""></span>
+          <span class="htext"><em>4</em><strong>The WindDancer Simulator</strong><span>WindDancer's method, run in its place with its devices.</span></span></a>
+      </div>
+
+    </section>
+
+    <!-- the authors' check: what to expect of this simulation (not in the user study) -->
+    <section class="cap capbadge" id="cap-badge" aria-label="Checked by its authors">
+      <div class="medal" id="medal"></div>
+      <p class="badgeeye">Checked by the paper's authors</p>
+      <h2>Its authors went through it, page by page</h2>
+      <div class="scores"><div><span>Accurate</span><b id="sa">–</b><small>/ 5</small><i style="--w:92%;--c:#19a85a"></i></div><div><span>Quality</span><b id="sq">–</b><small>/ 5</small><i style="--w:88%;--c:#2f6ee8"></i></div></div>
+      <p>Accurate: does each page say what the paper says. Quality: is it clear and well made. On every page, the mark at the bottom left shows that page's own scores.</p>
+    </section>
+
+    <!-- the way in -->
+    <section class="cap capgo" id="cap-go">
+      <h2>Now try WindDancer yourself</h2>
+      <p>Every control runs the paper's own method, in its place, with its devices.</p>
+      <a class="gobtn" id="go" href="../#who" data-in>Start the simulator <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 2l5 4-5 4"/></svg></a>
+      <p class="madeby gomade">The Sensing Universe, the Sensing World and this simulator are generated by the Sense2Sim skill and AI agent models. AI agent models may make mistakes.</p>
+    </section>
+  </div>
+</main>
+
+<script>
+// this simulation's paper (tools/site.mjs fills it): its title, short name, its star in intro-data.js ({ g, i }) where
+// known, and its authors' scores ({ a, q, who, date }) where they are given
+window.S2S_PAPER = {"title":"WindDancer: Understanding Acoustic Sensing under Ambient Airflow","short":"WindDancer","g":1,"i":263};
+// what the simulator loads (tools/site.mjs): fetched in the background once the opening's scene is ready (intro.js)
+window.S2S_PRELOAD = ["../library/OBJ-jbl_lsr308.txt","../library/A06.txt","../library/PH-cardboard_box_01.txt","../library/SR-climate_shopFan_pedestal_a01.txt","../library/SR-humidifier_a01.txt","../library/A26.txt","../world/winddancer-bench.glb.js","../world/winddancer-classroom.glb.js","../world/winddancer-line.glb.js","../world/winddancer-meeting.glb.js","../kg/exp-kg.json","../media/fig-1.png","../media/fig-2.png","../media/fig-3.png","../media/fig-4.png","../media/fig-5.png","../media/fig-6.png","../media/fig-7.png","../media/fig-8.png","../media/fig-9.png","../media/fig-10.png","../media/fig-11.png","../media/fig-12.png","../media/fig-13.png","../media/fig-14.png","../media/fig-15.png","../media/fig-16.png","../media/fig-17.png","../media/fig-18.png","../media/tab-1.png","../about/assets.jpg","https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"];
+(function () {
+  var q = location.search, study = /[?&](study|userstudy|user_study)=1(&|$)/.test(q);
+  try { sessionStorage.setItem("s2s-opening", study ? "study" : "plain"); } catch (e) {} // (the simulator opens here once a visit: js/feedback.js, opening)
+  // the way in: the simulator, with the same address's settings (?study=1)
+  document.addEventListener("DOMContentLoaded", function () { [].forEach.call(document.querySelectorAll("[data-in]"), function (a) { a.href = "../" + q + "#who"; }); });
+  // the authors' check: only where they gave scores, and never in the user study (no scores for its readers)
+  // (out of the study it is always shown, N/A where they gave none yet: the owner, 2026-11-22: “非study模式把打分所有相关的都放上去，没分就先写NA”)
+  var P = window.S2S_PAPER; if (P) P.scored = !study;
+  if (P && !study && !P.scores) document.addEventListener("DOMContentLoaded", function () {
+    var h = document.querySelector("#cap-badge h2"), e = document.querySelector("#cap-badge .badgeeye"), t = document.querySelector("#cap-badge > p:last-of-type");
+    if (e) e.textContent = "To be checked by the paper's authors"; if (h) h.textContent = "Its authors will go through it, page by page";
+    if (t) t.textContent = "They have not scored it yet, so the scores show N/A for now. Accurate: does each page say what the paper says. Quality: is it clear and well made. On every page, the mark at the bottom left will show that page's own scores.";
+    [].forEach.call(document.querySelectorAll("#cap-badge .scores i"), function (i) { i.style.setProperty("--w", "0%"); });
+    [].forEach.call(document.querySelectorAll("#cap-badge .scores small"), function (x) { x.hidden = true; }); });
+})();
+</script>
+<script src="medal.js"></script>
+<script type="module" src="medal3d.js"></script>
+<script src="intro-data.js"></script>
+<script src="assets.js"></script>
+<script src="intro.js"></script>
+<!-- page:end -->
+</body>
+</html>

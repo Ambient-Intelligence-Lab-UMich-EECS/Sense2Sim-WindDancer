@@ -1,0 +1,288 @@
+{
+  "from": {
+    "file": "/tmp/sw-site-unRjCg/page/index.html",
+    "bytes": 9659860,
+    "sha256": "ab62fc403da78e7a82f86b87c477cbe61b5b19b5740a4f27227d9aa0d1ba098a"
+  },
+  "page": {
+    "path": "index.html",
+    "bytes": 1578633,
+    "sha256": "62e09e5e1448b3f8c5b1ef05c4e6fce5c93e90c9211cab12f27971ab51b0e570"
+  },
+  "library": "/nfs/turbo/coe-kesuniot1/senseweaver/library/current",
+  "files": [
+    {
+      "path": "library/OBJ-jbl_lsr308.txt",
+      "type": "text/plain",
+      "kind": "library",
+      "id": "OBJ-jbl_lsr308",
+      "glb": {
+        "bytes": 400168,
+        "sha256": "ee9def2faa64cde83df2ce780fb38cb6f8d3f3c3d665d2b3a477d1ba5bbc3c3b"
+      },
+      "library": "model.glb",
+      "bytes": 533560,
+      "sha256": "c41edcf6a2f3095c8d31f9737ad540fa1b16acda65f2c6711fe47553d4d4eab3"
+    },
+    {
+      "path": "library/A06.txt",
+      "type": "text/plain",
+      "kind": "library",
+      "id": "A06",
+      "glb": {
+        "bytes": 2149532,
+        "sha256": "7ab88fb6030690457e8bf19e11f8ed0938fe3d0b8ef6906e85983208d5d6d469"
+      },
+      "library": "lod1.glb",
+      "bytes": 2866044,
+      "sha256": "94c770384471dacc0b97c815771ba8d23c2f62837428765647661ef8d6918dc2"
+    },
+    {
+      "path": "library/PH-cardboard_box_01.txt",
+      "type": "text/plain",
+      "kind": "library",
+      "id": "PH-cardboard_box_01",
+      "glb": {
+        "bytes": 369140,
+        "sha256": "59dbabc3a4cd8b999344a8dfc9c79a914ab1ac5c9a988afb4f361cfbc80ca65e"
+      },
+      "library": "model.glb",
+      "bytes": 492188,
+      "sha256": "edc4e8747ca8c2d6115420b3efd7a1f6168c9c77249f590dbbf18323b90fc2ad"
+    },
+    {
+      "path": "library/SR-climate_shopFan_pedestal_a01.txt",
+      "type": "text/plain",
+      "kind": "library",
+      "id": "SR-climate_shopFan_pedestal_a01",
+      "glb": {
+        "bytes": 464300,
+        "sha256": "b1a92b51dc68d05b1c3c3feadcddbe257a74bec3fc8063f05a269362eec3f34c"
+      },
+      "library": "lod1.glb",
+      "bytes": 619068,
+      "sha256": "9f9087ccbbc79a8e7b135d595a5b24d9284394017df33c73b8d9086874e2af3e"
+    },
+    {
+      "path": "library/SR-humidifier_a01.txt",
+      "type": "text/plain",
+      "kind": "library",
+      "id": "SR-humidifier_a01",
+      "glb": {
+        "bytes": 235156,
+        "sha256": "c6bc1d279ef48c81b47eaeb9da24913730d311ffef4685afb7afc5d1df815477"
+      },
+      "library": "lod1.glb",
+      "bytes": 313544,
+      "sha256": "f7e5b2f7078e2d3639b3056d43757d8a09208473115630a233b5f1e0aa5e3dc9"
+    },
+    {
+      "path": "library/A26.txt",
+      "type": "text/plain",
+      "kind": "library",
+      "id": "A26",
+      "glb": {
+        "bytes": 313636,
+        "sha256": "9894f28aa264b9193c0316f391e96ed12f1f90deb9d8869e6f7e7275478769c2"
+      },
+      "library": "model.glb",
+      "bytes": 418184,
+      "sha256": "eef744eac23e495b88d39dc166faf26904d0587c44d4afe0c6ce11529ec169a3"
+    },
+    {
+      "path": "media/fig-1.png",
+      "type": "image/png",
+      "kind": "media",
+      "id": "fig-1",
+      "bytes": 65898,
+      "sha256": "db3bcf2508eaf573e3cd345c3f9e5955923622184aca196f66002644cac230c4"
+    },
+    {
+      "path": "media/fig-2.png",
+      "type": "image/png",
+      "kind": "media",
+      "id": "fig-2",
+      "bytes": 128851,
+      "sha256": "eeabb1466ce3d60a7cd2ad80ef5154f077b4628934ccf0f2f792ade6714baec3"
+    },
+    {
+      "path": "media/fig-3.png",
+      "type": "image/png",
+      "kind": "media",
+      "id": "fig-3",
+      "bytes": 118646,
+      "sha256": "6c975dae9792d09ac050c9335df55a20a1eac95215eb64671b9898e92aa382e4"
+    },
+    {
+      "path": "media/fig-4.png",
+      "type": "image/png",
+      "kind": "media",
+      "id": "fig-4",
+      "bytes": 121587,
+      "sha256": "a20ae89602967602ec9f89bf5d70d162ec7d8e6c617c5b19fc3991f68f0dabc8"
+    },
+    {
+      "path": "media/fig-5.png",
+      "type": "image/png",
+      "kind": "media",
+      "id": "fig-5",
+      "bytes": 29492,
+      "sha256": "4c107ed73f2deadbd3497388d54dae4911df5c4a354b01f7a74fc03032a4041c"
+    },
+    {
+      "path": "media/fig-6.png",
+      "type": "image/png",
+      "kind": "media",
+      "id": "fig-6",
+      "bytes": 60945,
+      "sha256": "3c7b63fd239387b7fd872fd1c7c8642965e60a91a2d7e574b2cc13f03096050c"
+    },
+    {
+      "path": "media/fig-7.png",
+      "type": "image/png",
+      "kind": "media",
+      "id": "fig-7",
+      "bytes": 155299,
+      "sha256": "9c39a40ab84664d97be408fca2fd7b696f77b3d59fcc9b53d34d45dd8494e2ff"
+    },
+    {
+      "path": "media/fig-8.png",
+      "type": "image/png",
+      "kind": "media",
+      "id": "fig-8",
+      "bytes": 51821,
+      "sha256": "d4a546d60b674b442ded9f9c7e015232e22f6af351df145bab5cc650516ac2bb"
+    },
+    {
+      "path": "media/fig-9.png",
+      "type": "image/png",
+      "kind": "media",
+      "id": "fig-9",
+      "bytes": 117740,
+      "sha256": "25090a9062445d800c7a9c608ec7fe406bf95a03d10388c9b7de0f286632d893"
+    },
+    {
+      "path": "media/fig-10.png",
+      "type": "image/png",
+      "kind": "media",
+      "id": "fig-10",
+      "bytes": 39461,
+      "sha256": "54dc63a91aa988d0ae92f71cae98b0104a4f5a40b0b87fc3b7dbdea92de57e87"
+    },
+    {
+      "path": "media/fig-11.png",
+      "type": "image/png",
+      "kind": "media",
+      "id": "fig-11",
+      "bytes": 106876,
+      "sha256": "27ecfe77780ad2bbf57625f2cd37dc974719d31112898c591fa36ba09da5ab11"
+    },
+    {
+      "path": "media/fig-12.png",
+      "type": "image/png",
+      "kind": "media",
+      "id": "fig-12",
+      "bytes": 90634,
+      "sha256": "b4fe5af1c8615bd600d36062cd6eeb5edfbd0d2ea385fcfe7b445ba11842129d"
+    },
+    {
+      "path": "media/fig-13.png",
+      "type": "image/png",
+      "kind": "media",
+      "id": "fig-13",
+      "bytes": 58431,
+      "sha256": "0b0826f1958ce44642fbe93050a2bea4aa40ca7b139572525d9cc1d986dc7641"
+    },
+    {
+      "path": "media/fig-14.png",
+      "type": "image/png",
+      "kind": "media",
+      "id": "fig-14",
+      "bytes": 65051,
+      "sha256": "92fc53e61660492c9b8ba02ceb46e06edd1ca4e24ae7bfc41729b6d92b856d35"
+    },
+    {
+      "path": "media/fig-15.png",
+      "type": "image/png",
+      "kind": "media",
+      "id": "fig-15",
+      "bytes": 70936,
+      "sha256": "35478a79823da2fcad1789a094dc6246610d21bae8cff9e21933352bc6df1d7e"
+    },
+    {
+      "path": "media/fig-16.png",
+      "type": "image/png",
+      "kind": "media",
+      "id": "fig-16",
+      "bytes": 65734,
+      "sha256": "90f3a95fa0087874e1e718074995447900b87d467065c14cbc616a06acbb2de9"
+    },
+    {
+      "path": "media/fig-17.png",
+      "type": "image/png",
+      "kind": "media",
+      "id": "fig-17",
+      "bytes": 45697,
+      "sha256": "ee5e4ea41be9a78a8aed4a7a4468e9e066f4c9bb3e6d49136a0b5b9008185b21"
+    },
+    {
+      "path": "media/fig-18.png",
+      "type": "image/png",
+      "kind": "media",
+      "id": "fig-18",
+      "bytes": 25550,
+      "sha256": "6e6fad8bb18bcd170d50bbbca7c40d00e0f31536291e1bac4554daf27a55a397"
+    },
+    {
+      "path": "media/tab-1.png",
+      "type": "image/png",
+      "kind": "media",
+      "id": "tab-1",
+      "bytes": 37881,
+      "sha256": "c45ac9f2192415798c368eb05dc0f12a0026dd54443818dbc42b2126b70199c5"
+    },
+    {
+      "path": "kg/exp-kg.json",
+      "type": "application/json",
+      "kind": "kg",
+      "id": "exp-kg",
+      "bytes": 897257,
+      "sha256": "6088a2a250e070bc4c01d134521e7612e5e950825be22064048183d4bc477a54"
+    },
+    {
+      "path": "world/winddancer-bench.glb.js",
+      "type": "text/javascript",
+      "kind": "world",
+      "bytes": 5191439,
+      "sha256": "4ddcc0659266a2e19b00fb38b929f84a1ea43825cffefe0930154ea8fc0d5e31"
+    },
+    {
+      "path": "world/winddancer-classroom.glb.js",
+      "type": "text/javascript",
+      "kind": "world",
+      "bytes": 2418187,
+      "sha256": "c6c65d89e2216bbd6b0a24ec61dc10417e75c8509ced74dafe5a9d921e37a164"
+    },
+    {
+      "path": "world/winddancer-line.glb.js",
+      "type": "text/javascript",
+      "kind": "world",
+      "bytes": 3365775,
+      "sha256": "830288e58a869a7528fe87dccb8d07517f7a1bf7464e0dd45b91fbf4617f0088"
+    },
+    {
+      "path": "world/winddancer-meeting.glb.js",
+      "type": "text/javascript",
+      "kind": "world",
+      "bytes": 2019979,
+      "sha256": "2d1d7d33572b50277f7695c42850e3895eab236ccb4a5a1e65e99fd54900d2be"
+    },
+    {
+      "path": "about/assets.jpg",
+      "type": "image/jpeg",
+      "kind": "about",
+      "bytes": 255701,
+      "sha256": "a51c4183387e14b4b30743bf27ce09d141f5416df282c4171cdf4dd71a7e139f"
+    }
+  ]
+}
