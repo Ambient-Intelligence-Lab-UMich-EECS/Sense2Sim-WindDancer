@@ -1,15 +1,16 @@
 {
   "from": {
-    "file": "/tmp/sw-site-unRjCg/page/index.html",
-    "bytes": 9659860,
-    "sha256": "ab62fc403da78e7a82f86b87c477cbe61b5b19b5740a4f27227d9aa0d1ba098a"
+    "file": "/tmp/sw-site-Ga5OTp/page/index.html",
+    "bytes": 9671291,
+    "sha256": "7a397b152c2c29012b184cd1871e4a1b1957fe4840f78b1cc4ecf28d5851afa7"
   },
   "page": {
     "path": "index.html",
-    "bytes": 1578633,
-    "sha256": "62e09e5e1448b3f8c5b1ef05c4e6fce5c93e90c9211cab12f27971ab51b0e570"
+    "bytes": 1590064,
+    "sha256": "fdb5a7cc552003e9a6e5ad273f92ea94217b8597b95506ab160c60ca796a3b51"
   },
   "library": "/nfs/turbo/coe-kesuniot1/senseweaver/library/current",
+  "kb": "/nfs/turbo/coe-kesuniot1/senseweaver/staging/2026-11-18-a61/kit85/kb/kb.json",
   "files": [
     {
       "path": "library/OBJ-jbl_lsr308.txt",
@@ -246,6 +247,7 @@
       "type": "application/json",
       "kind": "kg",
       "id": "exp-kg",
+      "kb": true,
       "bytes": 897257,
       "sha256": "6088a2a250e070bc4c01d134521e7612e5e950825be22064048183d4bc477a54"
     },

@@ -9774,25 +9774,38 @@ document.addEventListener("pointerdown", (e) => { for (const d of document.query
 // Run as a page shows, as More controls or “Show all controls” open, and whenever the column's size changes.
 function fitColumn(s) {
   const t = s && s.querySelector(":scope > .text, .only:not([hidden]) > .text"); if (!t || !t.getClientRects().length) return;
-  const st = stage.getBoundingClientRect(), k = st.width / 1920 || 1, Y = (r) => (r - st.top) / k;
+  // measured in the stage's own layout (offsetTop/offsetHeight): what an entrance animation moves or scales is not counted,
+  // so every load, at any moment, fits the column the same way (MoiréLens, 2026-11-23: “Time filter” shown on some loads only)
+  const oy = (el) => { let y = 0; for (let x = el; x && x !== stage; x = x.offsetParent) y += x.offsetTop; return y; };
+  const shown = (el) => el.getClientRects().length > 0;
   // the limit: a status line under the column (below its top, across its width), else the bar; a capsule above the
   // column or beside it is no limit (SwimHR, 2026-11-23: a capsule at the top clipped its controls)
-  const tr = t.getBoundingClientRect(), under = [...s.querySelectorAll(".capsule")].filter((c) => { if (!c.getClientRects().length || getComputedStyle(c).visibility === "hidden") return false; const r = c.getBoundingClientRect(); return r.top > tr.top + 200 * k && r.left < tr.right && r.right > tr.left; });
-  const limit = Math.min(1000, ...under.map((c) => Y(c.getBoundingClientRect().top))) - 12;
-  const flow = () => Math.max(...[...t.children].filter((c) => c.getClientRects().length && getComputedStyle(c).position !== "absolute").map((c) => Y(c.getBoundingClientRect().bottom)), 0);
+  const tTop = oy(t), tL = t.offsetLeft, tR = t.offsetLeft + t.offsetWidth;
+  const under = [...s.querySelectorAll(".capsule")].filter((c) => shown(c) && getComputedStyle(c).visibility !== "hidden" && oy(c) > tTop + 200 && c.offsetLeft < tR && c.offsetLeft + c.offsetWidth > tL);
+  const limit = Math.min(1000, ...under.map((c) => oy(c))) - 12;
+  const flow = () => Math.max(...[...t.children].filter((c) => shown(c) && getComputedStyle(c).position !== "absolute").map((c) => oy(c) + c.offsetHeight), 0);
   // (the readouts first, then the controls, then the steps; each down to a few lines, then, if the column is still too
   // tall, each down to two lines)
-  const fits = [".ros", ".morectl[open] > .controls", ":scope > .controls", ".turns"].flatMap((q) => [...t.querySelectorAll(q)]).filter((e) => e.getClientRects().length);
+  const fits = [".ros", ".morectl[open] > .controls", ":scope > .controls", ".turns"].flatMap((q) => [...t.querySelectorAll(q)]).filter(shown);
   for (const e of fits) { e.style.maxHeight = ""; e.classList.remove("fitscroll"); }
   for (const least of [96, 56]) for (const e of fits) {
     const over = flow() - limit; if (over <= 0) return;
-    const h = e.getBoundingClientRect().height / k; if (h <= least) continue;
+    const h = e.offsetHeight; if (h <= least) continue;
     // (cut between its rows, never through one: a row's letters are whole or scrolled away; MoiréLens' review, “tails cut”)
-    let want = Math.max(least, Math.floor(h - over)); const top = e.getBoundingClientRect().top, pb = parseFloat(getComputedStyle(e).paddingBottom) || 0;
-    const ends = [...e.children].filter((c) => c.getClientRects().length).map((c) => (c.getBoundingClientRect().bottom - top) / k).filter((b) => b + pb <= want);
+    let want = Math.max(least, Math.floor(h - over)); const top = oy(e), pb = parseFloat(getComputedStyle(e).paddingBottom) || 0;
+    const ends = [...e.children].filter(shown).map((c) => oy(c) + c.offsetHeight - top).filter((b) => b + pb <= want);
     if (ends.length) want = Math.max(least, Math.ceil(Math.max(...ends) + pb));
     e.style.maxHeight = want + "px"; e.classList.add("fitscroll");
   }
+}
+// fitted again only when what decides the fit has changed: the page, its step, the content heights of the column's parts
+// (scrollHeight: read, never written, so a frame with nothing new costs no layout), its folds opened, its status line
+let fitSig = "";
+function fitIfChanged(s) {
+  const t = s && s.querySelector(":scope > .text, .only:not([hidden]) > .text"); if (!t) return;
+  const parts = [...t.querySelectorAll(".ros, .morectl, .controls, .turns")];
+  const sig = cur + "|" + step + "|" + [...t.children].map((c) => (c.getClientRects().length ? c.scrollHeight : 0)).join(",") + "|" + parts.map((e) => e.scrollHeight + (e.open ? "o" : "")).join(",") + "|" + [...s.querySelectorAll(".capsule")].map((c) => c.offsetTop).join(",");
+  if (sig === fitSig) return; fitSig = sig; fitColumn(s); fitSig = cur + "|" + step + "|" + [...t.children].map((c) => (c.getClientRects().length ? c.scrollHeight : 0)).join(",") + "|" + parts.map((e) => e.scrollHeight + (e.open ? "o" : "")).join(",") + "|" + [...s.querySelectorAll(".capsule")].map((c) => c.offsetTop).join(",");
 }
 { let fitT = 0, busy = false;
   // a fit changes the column's size, which the observer sees: its own changes are not answered (no loop), and only a fold or a
@@ -12664,6 +12677,7 @@ function frame(now) {
   }
   if (page.ro) syncReadouts(s, page, ctx);
   sawFit(s); // the figure under the page's result box (js/deck.js)
+  try { fitIfChanged(s); } catch (e) {} // the text column kept above its status line, looked at every frame and fitted when it changed, so a still is the same whenever it is taken (js/deck.js; MoiréLens' s3.5 differed between loads; VECTOR's c3 slowed by a fit every frame)
   if (page.status) { const el = s.querySelector(".capsule .ph"), txt = page.status(ctx); if (el && el.textContent !== txt) el.textContent = txt; }
   if (page.tick) page.tick(ctx);
   lightTick(); // the band's windows laid again when one appears (js/focus.js)
@@ -12696,7 +12710,7 @@ const FB_H2C = "https://cdn.jsdelivr.net/npm/html2canvas-pro@1.5.8/dist/html2can
 const PAGE_THUMBS = {"about":"thumbs/about.jpg","all":"thumbs/all.jpg","c1":"thumbs/c1.jpg","c2":"thumbs/c2.jpg","demo":"thumbs/demo.jpg","exp-ablation":"thumbs/exp-ablation.jpg","exp-array":"thumbs/exp-array.jpg","exp-general":"thumbs/exp-general.jpg","exp-kg":"thumbs/exp-kg.jpg","exp-kg2":"thumbs/exp-kg2.jpg","exp-physics":"thumbs/exp-physics.jpg","exp-related":"thumbs/exp-related.jpg","exp-world":"thumbs/exp-world.jpg","explore":"thumbs/explore.jpg","gap":"thumbs/gap.jpg","how":"thumbs/how.jpg","idea":"thumbs/idea.jpg","inuse":"thumbs/inuse.jpg","level-1":"thumbs/level-1.jpg","motivation":"thumbs/motivation.jpg","open":"thumbs/open.jpg","s1":"thumbs/s1.jpg","s2":"thumbs/s2.jpg","see":"thumbs/see.jpg","sense2sim":"thumbs/sense2sim.jpg","sim-real":"thumbs/sim-real.jpg","start-2":"thumbs/start-2.jpg","start":"thumbs/start.jpg","terms":"thumbs/terms.jpg","title":"thumbs/title.jpg","use":"thumbs/use.jpg","who":"thumbs/who.jpg"};
 // what each answer says it came from: the simulation (its repository's name, Sense2Sim-<paper>), the kit's version and
 // the kind of reader (as picked on the first page, or the default kind marked "not picked"); tools/site.mjs fills S2S_SITE
-const S2S_SITE = {"name":"Sense2Sim-WindDancer","kit":"6.0.0-alpha.85","title":"WindDancer: Understanding Acoustic Sensing under Ambient Airflow","url":"https://ambient-intelligence-lab-umich-eecs.github.io/Sense2Sim-WindDancer/","build":"20261123T102335","opening":true};
+const S2S_SITE = {"name":"Sense2Sim-WindDancer","kit":"6.0.0-alpha.85","title":"WindDancer: Understanding Acoustic Sensing under Ambient Airflow","url":"https://ambient-intelligence-lab-umich-eecs.github.io/Sense2Sim-WindDancer/","build":"20261123T224657","opening":true};
 const s2sSite = () => S2S_SITE.name || (location.pathname.match(/\/(Sense2Sim-[^/]+)\//) || [])[1] || document.title;
 const s2sKit = () => S2S_SITE.kit || "";
 // A reader never works on an older page than the site's (the owner, 2026-11-22: “每次进入强制刷新浏览器缓存”): as the page
@@ -12876,8 +12890,12 @@ function s2sEnd(then, at) {
     },
     foot(el, a) {
       const why = tabs.map((t) => t.ready()).filter(Boolean), info = tabs.map((t) => (t.info ? t.info() : "")).filter(Boolean);
-      el.innerHTML = `<span>${why.length ? why.concat(info).join(" · ") : ["Everything is ready to send"].concat(info).join(" · ")}</span><button type="button" class="fbbtn fbgo" ${why.length ? "disabled" : ""}>Submit all</button>`;
-      el.querySelector("button").onclick = async () => { const b = el.querySelector("button"); b.disabled = true; b.textContent = "Sending…";
+      // a part's own way to give what is left (the owner, 2026-11-23: “在显示6 surveys not answered后面可以有一个按钮，点进去，可以
+      // complete 没做的那些…把他们没做的放成一页”): its button after the words, before “Submit all”
+      const acts = tabs.map((t) => (t.act ? t.act() : null)).filter(Boolean);
+      el.innerHTML = `<span>${why.length ? why.concat(info).join(" · ") : ["Everything is ready to send"].concat(info).join(" · ")}</span>${acts.map((x, n) => `<button type="button" class="fbbtn fbact" data-act="${n}">${String(x.label).replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch])}</button>`).join("")}<button type="button" class="fbbtn fbgo fbsubmit" ${why.length ? "disabled" : ""}>Submit all</button>`;
+      el.querySelectorAll("[data-act]").forEach((b) => b.onclick = (e) => { e.stopPropagation(); acts[+b.dataset.act].run(() => { a.refresh(); a.reside(); }); });
+      el.querySelector(".fbsubmit").onclick = async () => { const b = el.querySelector(".fbsubmit"); b.disabled = true; b.textContent = "Sending…";
         let after = null; for (const t of tabs) { try { const r = await t.send(); if (typeof r === "function") after = r; } catch (e) {} }
         closingForGood = true; a.close(); if (ovw) { S2S_ENDING = false; S2S_OVERVIEW = false; S2S_END_API = null; if (after) after(() => {}); return; } if (after) after(finish); else finish(); };
     },
@@ -13005,21 +13023,24 @@ function s2sStudy() {
 .fbdlg > div { background: var(--panel, #fffdf8); color: var(--ink, #1d2129); border-radius: 12px; padding: 18px; width: min(560px, 100%); display: grid; gap: 12px; font: 17px/1.5 system-ui, sans-serif; }
 .fbov { position: fixed; inset: 0; z-index: 75; background: var(--bg, #efe9dd); }
 .fbovtip { position: fixed; z-index: 62; width: min(380px, calc(100vw - 24px)); padding: 14px 16px; display: grid; gap: 8px; color: var(--ink, #1d2129); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.25); font: 15px/1.45 system-ui, sans-serif; } .fbovtip h3 { margin: 0; font-size: 17px; } .fbovtip p { margin: 0; } .fbovtip::after { content: ""; position: absolute; left: 22px; bottom: -9px; width: 14px; height: 14px; background: var(--panel, #fffdf8); transform: rotate(45deg); }
-.fbov .fbtour { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); right: auto; top: 64px; bottom: auto; max-width: min(420px, calc(100vw - 32px)); z-index: 3; } .fbtour ol { margin: 6px 0 10px; padding-left: 20px; display: grid; gap: 6px; } .fbtour li { line-height: 1.4; }
+.fbtour.fbcard { position: fixed; z-index: 2147483001; right: auto; bottom: auto; max-height: calc(100vh - 16px); overflow-y: auto; width: min(400px, calc(100vw - 24px)); box-sizing: border-box; margin: 0; } .fbtour h3 { margin: 2px 0 6px; } .fbtour p { margin: 0 0 10px; line-height: 1.45; } .fbtour .fbrow { display: flex; gap: 8px; align-items: center; } .fbtour .fbrow span { flex: 1; } .fbtstep { font: 700 12px/1 system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; opacity: .6; }
+.fbtring { position: fixed; z-index: 2147483000; border-radius: 10px; border: 3px solid #ff8a5b; box-shadow: 0 0 0 9999px rgba(0,0,0,.45), 0 0 18px rgba(255,138,91,.8); pointer-events: none; transition: left .25s, top .25s, width .25s, height .25s; } @media (prefers-reduced-motion: reduce) { .fbov .fbtring { transition: none; } }
 .fbov.fbrev .fbboard { bottom: 100px; }
 .fbov.fbrev .fbside, .fbov.fbrev .fbbelow { display: none; } .fbov.fbrev.fbpicked .fbside, .fbov.fbrev.fbpicked .fbbelow:not(:empty) { display: grid; }
 .fbov.fbpicked .fbboard { cursor: default; } .fbov.fbrev .fbtile { transition: opacity .35s; } .fbov.fbpicked .fbtile:not(.fbnear) { opacity: .07; }
 .fbov.fbrev .fbside, .fbbelow { position: absolute; right: auto; bottom: auto; padding: 16px 18px; border: 1px solid rgba(128,128,128,.3); border-radius: 12px; box-shadow: 0 8px 26px rgba(0,0,0,.18); }
 .fbbelow { box-sizing: border-box; overflow-y: auto; background: var(--panel, #fffdf8); color: var(--ink, #1d2129); font: 16px/1.45 system-ui, sans-serif; gap: 10px; align-content: start; z-index: 1; }
 .fbbelow .s2ssec { border-top: 0; padding-top: 0; }
-.fbov.fbpicked .fbside, .fbov.fbpicked .fbbelow { padding: 10px 12px; font-size: 14px; gap: 8px; border-radius: 10px; } .fbov.fbpicked .fbside h3 { font-size: 16px; }
-.fbov.fbpicked .s2ssec { gap: 6px; padding-top: 8px; } .fbov.fbpicked .s2ssec .fbbtn { font-size: 13px; padding: 4px 8px; } .fbov.fbpicked .fbbelow .s2ssec { padding-top: 0; }
-.fbov.fbpicked .fbbelow .aum { gap: 3px; } .fbov.fbpicked .fbbelow .ausc button { padding: 3px 0; font-size: 15px; } .fbov.fbpicked .fbbelow .aum .aulab b { font-size: 13px; } .fbov.fbpicked .fbbelow .aum .aulab span { font-size: 12px; }
+.fbov.fbpicked .fbside, .fbov.fbpicked .fbbelow { padding: 14px 14px; font-size: 16px; line-height: 1.45; gap: 12px; border-radius: 10px; align-content: start; } .fbov.fbpicked .fbside h3 { font-size: 19px; } /* (the owner, 2026-11-23: “这部分和下面的都字太小，看着有很多空的”, “也不要太大，合适就行”, then “还是-1吧 我是说这两块”: these two panels only) */
+.fbov.fbpicked .fbside .fbdim, .fbov.fbpicked .fbbelow .fbdim { font-size: 15px; } .fbov.fbpicked .s2ssec > h4 { font-size: 13px; line-height: 1.2; } .fbov.fbpicked .s2ssec textarea { font-size: 15px; min-height: 80px; } .fbov.fbpicked .svra dt, .fbov.fbpicked .svra dd { font-size: 15px; }
+.fbov.fbpicked .s2ssec { gap: 10px; padding-top: 12px; } .fbov.fbpicked .s2ssec .fbbtn, .fbov.fbpicked .fbside .fbbtn { font-size: 15px; padding: 6px 10px; } .fbov.fbpicked .fbside .fbgoto { font-size: 16px; } .fbov.fbpicked .fbbelow .s2ssec { padding-top: 0; }
+.fbov.fbpicked .fbbelow .aum { gap: 6px; } .fbov.fbpicked .fbbelow .ausc button { padding: 6px 0; font-size: 17px; } .fbov.fbpicked .fbbelow .aum .aulab b { font-size: 16px; } .fbov.fbpicked .fbbelow .aum .aulab span { font-size: 14px; }
 .fbov.fbrev .fbfoot { top: auto; bottom: 52px; left: 0; right: 0; height: 48px; padding: 0 max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px)); justify-content: space-between; background: var(--panel, #fffdf8); border-top: 1px solid rgba(128,128,128,.3); font-size: 16px; }
 .fbside { position: absolute; right: 0; top: 0; bottom: 52px; width: min(460px, 42vw); box-sizing: border-box; overflow-y: auto; padding: 64px 18px 18px; background: var(--panel, #fffdf8); border-left: 1px solid rgba(128,128,128,.3); color: var(--ink, #1d2129); font: 16px/1.45 system-ui, sans-serif; display: grid; gap: 12px; align-content: start; }
 .fbside h3 { margin: 0; font: 600 20px/1.25 system-ui, sans-serif; } .fbside p { margin: 0; } .fbside .fbdim { opacity: .7; font-size: 14px; }
 .fbfoot { position: absolute; right: max(12px, env(safe-area-inset-right, 0px)); top: max(12px, env(safe-area-inset-top, 0px)); display: flex; gap: 10px; align-items: center; z-index: 2; font: 15px system-ui, sans-serif; color: var(--ink, #1d2129); }
 .fbgoto { background: var(--accent, #7a5a12) !important; border-color: var(--accent, #7a5a12) !important; color: var(--bg, #fffdf8) !important; font-weight: 600; }
+.fbov.fbrev .fbfoot > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .fbfoot .fbbtn { flex: none; } .fbfoot .fbact { border-color: #ff8a5b; box-shadow: 0 0 0 2px rgba(255,138,91,.45); font-weight: 600; }
 .fbfoot .fbbtn[disabled] { opacity: .45; cursor: not-allowed; } .fbfoot .fbgo { background: var(--accent, #7a5a12); border-color: var(--accent, #7a5a12); color: var(--bg, #fffdf8); font-weight: 600; }
 .fbtile .fbbadge { position: absolute; right: 8px; top: 8px; display: flex; gap: 6px; font: 600 22px system-ui, sans-serif; }
 .fbtile .fbbadge:empty { display: none; }
@@ -13296,14 +13317,62 @@ pre.fbpre { background: rgba(128,128,128,.08); border-radius: 8px; padding: 10px
       <div class="fbtop"><button class="fbbtn" type="button" data-k="close">✕ Close</button><span>${o && o.top ? o.top : "Which page? Move fast to see more, slow down to look closer, rest on one to see it whole; click it to open it."}</span></div>${o ? `<div class="fbfoot"></div>` : ""}`;
     if (o) { ov.classList.add("fbrev"); if (o.side) ov.classList.add("fbwith"); if (o.label) ov.setAttribute("aria-label", o.label); }
     document.body.append(ov);
-    // how to use the board, the first time it opens in a visit (the owner, 2026-11-22: “这一页也做一些教程 比如怎么选页面 怎么跳转等”):
-    // a card over the board's corner, until “Got it” (sessionStorage, each mode its own)
-    if (o && !navigator.webdriver) { const tk = "s2s-board-tour" + (s2sStudy() ? ":study" : ""); let seenT = false; try { seenT = !!sessionStorage.getItem(tk); } catch (e) {}
-      if (!seenT) { const sum = !S2S_OVERVIEW, c = document.createElement("div"); c.className = "fbcard fbtour"; c.setAttribute("role", "note");
-        c.innerHTML = `<h3>How to use this board</h3><ol><li><b>Look around.</b> Move the pointer over the pages. Move fast to see them all, slow down to look closer.</li><li><b>Pick a page.</b> Click it. It moves to the top left, with what you gave on it beside it and under it${sum ? ", where you can change it" : ""}.</li><li><b>Look again.</b> Move the pointer off the page and its panels (to the top or the bottom bar) to look around again.</li><li><b>Jump to it.</b> Press “Go to this page ›” beside it.</li>${sum ? "<li><b>A page framed in orange</b> still wants an answer or a score.</li><li><b>Done?</b> Press “Submit all” at the bottom right. Nothing is sent before that.</li>" : "<li><b>Close.</b> “✕ Close” at the top left, or Esc, takes you back where you were.</li>"}</ol><div class="fbrow"><button class="fbbtn fbprimary" type="button">Got it</button></div>`;
-        c.querySelector("button").onclick = (e) => { e.stopPropagation(); c.remove(); try { sessionStorage.setItem(tk, "1"); } catch (e2) {} };
-        for (const ev of ["click", "pointerdown", "pointermove", "keydown"]) c.addEventListener(ev, (e) => e.stopPropagation());
-        ov.append(c); } }
+    // how to use the board (the owner, 2026-11-22: “这一页也做一些教程 比如怎么选页面 怎么跳转等”; 2026-11-23: “可能每次打开的时候都要
+    // 展示一下，现在大家都不会用”, then “教程，可以分步骤，然后每一个用法都要cover到”): a tour, step by step, each time the board
+    // opens. Each step rings the part of the board it is about (the rest dimmed) and says how to use it, in a card beside
+    // the ring, never over it; Back, Next, Skip. Only the steps whose part this board has (the study's questions, an
+    // author's scores, the notes, the bottom bar's buttons). “? How to use” on the top bar starts it again.
+    // (the ring and the card over everything on the board, in the page's body; gone with the board)
+    const tour = () => { if (document.querySelector(".fbtour")) return;
+      const sum = !S2S_OVERVIEW, has = (q) => !!ov.querySelector(q), study = has('.s2ssec[data-k="questions"]'), scores = has('.s2ssec[data-k="scores"]'), notes = has('.s2ssec[data-k="notes"]');
+      const steps = [
+        { at: ".fbboard", h: "Look around", p: "Move the pointer over the pages. Move fast to see them all; slow down to look closer; rest on one page to see it whole." },
+        { at: ".fbnav", h: "Pages by level", p: "The dots along the bottom are the pages, grouped by level. Point at a dot to see its page; click it to pick that page." },
+        { at: ".fbtile", h: "Pick a page", p: "Click a page. It moves to the top left, at the size you looked at it, and what belongs to it opens beside it" + (scores ? " and under it." : ".") },
+        study && { pick: 1, at: '.s2ssec[data-k="questions"]', h: "Its survey", p: "The questions of the part this page is in, with your answers. “Answer now” answers them; “Change these answers” opens them with your answers, to change." },
+        scores && { pick: 1, at: '.s2ssec[data-k="scores"]', h: "Your scores", p: "For the paper's authors: the scores you gave this page. Change any of them here; a page with none still wants its scores." },
+        notes && { pick: 1, at: '.s2ssec[data-k="notes"]', h: "Your notes", p: "Your think-aloud notes. “+ Add a note” writes one; “✎ Draw a box on this page” marks where it is about (its box shows on the page here); “+ A note on the whole page” is about all of it. Change or delete a note in its card." },
+        { pick: 1, at: ".fbside .fbgoto", or: ".fbside", h: "Go to the page", p: "“Go to this page ›” beside a picked page opens it in the simulation. Come back with the board button on the bar at the foot of the page." },
+        { at: ".fbtop", h: "Look around again", p: "With a page picked, the board stays still. Move the pointer off the page and its panels, to the top bar or the bottom bars, and the board follows the pointer again." },
+        o.miss && { at: ".fbtile.fbmiss", or: ".fbboard", h: "Orange frames", p: "A page framed in orange still wants something from you: an answer" + (scores ? " or a score" : "") + ". Its dot at the bottom is orange too." },
+        has(".fbfoot .fbact") && { at: ".fbfoot .fbact", h: "Finish what is left", p: "The bottom bar says what is still missing. This button opens everything not answered yet, all in one page, one set under another." },
+        has(".fbfoot .fbsubmit") && { at: ".fbfoot .fbsubmit", h: "Submit", p: "When nothing is missing, press it to send everything at once. Nothing is sent before that." + (sum ? "" : " You can also come back later.") },
+        { at: ".fbtop", h: "Close, or see this again", p: "“✕ Close” (or Esc) takes you back where you were. “? How to use” shows these steps again." },
+      ].filter(Boolean).filter((x) => has(x.at) || (x.or && has(x.or)));
+      let k = 0;
+      const ring = document.createElement("div"); ring.className = "fbtring";
+      const c = document.createElement("div"); c.className = "fbcard fbtour"; c.setAttribute("role", "dialog"); c.setAttribute("aria-label", "How to use this board");
+      const end = () => { ring.remove(); c.remove(); removeEventListener("resize", draw); clearInterval(gone); };
+      const gone = setInterval(() => { if (!ov.isConnected) end(); }, 400);
+      function draw() {
+        const S = steps[k];
+        // a step about a picked page's panels picks one (the page the reader was on), so what it names is there to see
+        if (S.pick && !ov.classList.contains("fbpicked")) { try { api.show(P.some((x) => x.i === cur) ? cur : P[0].i); } catch (e) {} return setTimeout(draw, 700); }
+        const vis = (q) => { const e = q && ov.querySelector(q); return e && e.getBoundingClientRect().width > 4 ? e : null; };
+        const el = vis(S.at) || vis(S.or) || ov.querySelector(".fbboard"), r = el.getBoundingClientRect(), W = innerWidth, H = innerHeight, pad = 6;
+        const R = { x: Math.max(4, r.left - pad), y: Math.max(4, r.top - pad), w: Math.min(W - 8, r.width + 2 * pad), h: Math.min(H - 8, r.height + 2 * pad) };
+        Object.assign(ring.style, { left: R.x + "px", top: R.y + "px", width: R.w + "px", height: R.h + "px" });
+        c.innerHTML = `<div class="fbtstep">Step ${k + 1} of ${steps.length}</div><h3>${S.h}</h3><p>${S.p}</p><div class="fbrow"><button class="fbbtn" type="button" data-t="skip">Skip</button><span></span>${k ? `<button class="fbbtn" type="button" data-t="back">‹ Back</button>` : ""}<button class="fbbtn fbprimary" type="button" data-t="next">${k < steps.length - 1 ? "Next ›" : "Got it"}</button></div>`;
+        c.querySelector('[data-t="skip"]').onclick = (e) => { e.stopPropagation(); end(); };
+        const bk = c.querySelector('[data-t="back"]'); if (bk) bk.onclick = (e) => { e.stopPropagation(); k--; draw(); };
+        c.querySelector('[data-t="next"]').onclick = (e) => { e.stopPropagation(); if (k < steps.length - 1) { k++; draw(); } else end(); };
+        // the card beside the ring, never over it: below, above, right, left, whichever has room; else in the middle of the
+        // screen's largest free side
+        c.style.left = c.style.top = "0px"; const cw = c.offsetWidth, ch = c.offsetHeight, g = 12;
+        const tries = [[R.x, R.y + R.h + g], [R.x, R.y - ch - g], [R.x + R.w + g, R.y], [R.x - cw - g, R.y]];
+        let at = tries.find(([x, y]) => y >= 8 && y + ch <= H - 8 && x + cw >= 0) || null;
+        if (at) at = [Math.min(Math.max(8, at[0]), W - cw - 8), at[1]];
+        else { const below = H - (R.y + R.h), above = R.y; at = [Math.max(8, (W - cw) / 2), below >= above ? Math.min(H - ch - 8, R.y + R.h + g) : Math.max(8, R.y - ch - g)]; }
+        c.style.left = at[0] + "px"; c.style.top = at[1] + "px";
+        c.querySelector('[data-t="next"]').focus({ preventScroll: true });
+      }
+      for (const ev of ["click", "pointerdown", "pointermove", "keydown"]) { c.addEventListener(ev, (e) => e.stopPropagation()); ring.addEventListener(ev, (e) => e.stopPropagation()); }
+      c.addEventListener("keydown", (e) => { if (e.key === "Escape") end(); else if (e.key === "ArrowRight") c.querySelector('[data-t="next"]').click(); else if (e.key === "ArrowLeft" && k) { k--; draw(); } });
+      document.body.append(ring, c); draw(); addEventListener("resize", draw); };
+    if (o) { const hb = document.createElement("button"); hb.type = "button"; hb.className = "fbbtn fbhow"; hb.dataset.k = "how"; hb.textContent = "? How to use"; hb.onclick = (e) => { e.stopPropagation(); tour(); };
+      const tb = ov.querySelector(".fbtop"); tb.insertBefore(hb, tb.querySelector("span"));
+      // (after the board's panels are drawn; not in the kit's own browsers, whose stills are of the board itself, unless ?tour=1)
+      if (!navigator.webdriver || /[?&]tour=1(&|$)/.test(location.search)) setTimeout(() => { if (ov.isConnected) tour(); }, 80); }
     closeBoard = () => { ov.remove(); closeBoard = () => {}; if (o && o.onclose) o.onclose(); };
     ov.querySelector('[data-k="close"]').onclick = () => closeBoard();
     const B = board(ov.querySelector(".fbboard"), ov.querySelector(".fbsheet"));
@@ -13332,6 +13401,7 @@ pre.fbpre { background: rgba(128,128,128,.08); border-radius: 8px; padding: 10px
       addEventListener("resize", () => { if (picked >= 0 && document.body.contains(ov)) B.pin(picked, layout(picked)); });
     }
     const api = { pages: P, below, close: () => closeBoard(), show: (i) => { clearTimeout(dwellT); pickPage(i); }, peek: (i) => B.show(i),
+      reside() { if (side && o && o.side) o.side(side, at, api); }, // the panel beside the board drawn again, for the page it shows
       refresh() { if (!o) return; for (const t of ov.querySelectorAll(".fbtile")) { const p = P[+t.dataset.p]; t.querySelector(".fbbadge").innerHTML = o.badge ? o.badge(p) || "" : "";
           { let bx = t.querySelector(".fbboxes"); if (!bx) { bx = document.createElement("span"); bx.className = "fbboxes"; t.append(bx); } bx.innerHTML = (o.boxes ? o.boxes(p) || [] : []).map((b) => `<i style="left:${b.rect[0]}%;top:${b.rect[1]}%;width:${b.rect[2]}%;height:${b.rect[3]}%"><b>${b.n}</b></i>`).join(""); } t.classList.toggle("fbmiss", !!(o.miss && o.miss(p))); }
         for (const d of ov.querySelectorAll(".fbd")) d.classList.toggle("fbmiss", !!(o.miss && o.miss(P[+d.dataset.i]))); if (foot && o.foot) o.foot(foot, api); } };
@@ -13410,7 +13480,7 @@ pre.fbpre { background: rgba(128,128,128,.08); border-radius: 8px; padding: 10px
 const AUTHOR_CERT = null;
 // out of the study, every reader sees every place of the authors' scores, N/A where they gave none yet (the owner,
 // 2026-11-22: “非study模式把打分所有相关的都放上去，没分就先写NA，但是都要显示，包括simulation里面”)
-const auCert = () => (s2sStudy() || (typeof navigator !== "undefined" && navigator.webdriver && !/[?&]author=1(&|$)/.test(location.search)) ? null : /* (not in the kit's own browsers: its stills stay as they were) */ AUTHOR_CERT && AUTHOR_CERT.scores ? AUTHOR_CERT : { scores: {}, none: true });
+const auCert = () => (s2sStudy() || (typeof navigator !== "undefined" && navigator.webdriver && !/[?&](author|marks)=1(&|$)/.test(location.search)) ? null : /* (not in the kit's own browsers: its stills stay as they were) */ AUTHOR_CERT && AUTHOR_CERT.scores ? AUTHOR_CERT : { scores: {}, none: true });
 let AU_REVIEW = null; // (then) → the author's scores looked over at the end, when they are on and not sent yet (js/survey.js calls it)
 let AU_BLOCKS = () => false; // the author's scores of this page still wanted: → waits for them (js/survey.js asks its questions after)
 const AU_FONT = (typeof document !== "undefined" && getComputedStyle(document.documentElement).getPropertyValue("--font").trim()) || "system-ui, sans-serif"; // the page's own face (css/deck.css), on the medal too
@@ -13923,7 +13993,9 @@ const SURVEY = [
     q: "parts", // one row for each part of the simulation this reader met
     text: "Did Sense2Sim inspire any new sensing research questions, applications, experiments, or user study ideas? If yes, briefly describe one idea and which section inspired it. If not, you may write “None.”" },
   { key: "overall", title: "Overall", about: "Sense2Sim as a whole.", na: false,
-    q: [["Understanding", "Compared with reading the paper alone, Sense2Sim helped me understand it better."], ["Reuse", "I would use Sense2Sim to learn about other sensing papers."]],
+    // the System Usability Scale's ten (the owner, 2026-11-23: “最后一个survey的overall 替换成这个10个问题”), in its order,
+    // its odd items worded for, its even ones against; 1 strongly disagree … 5 strongly agree
+    q: [["Frequent use", "I think that I would like to use this system frequently."], ["Complexity", "I found the system unnecessarily complex."], ["Ease of use", "I thought the system was easy to use."], ["Technical support", "I think that I would need the support of a technical person to be able to use this system."], ["Integration", "I found the various functions in this system were well integrated."], ["Inconsistency", "I thought there was too much inconsistency in this system."], ["Quick to learn", "I would imagine that most people would learn to use this system very quickly."], ["Cumbersome", "I found the system very cumbersome to use."], ["Confidence", "I felt very confident using the system."], ["Learning needed", "I needed to learn a lot of things before I could get going with this system."]],
     text: "What is the one thing you would most like us to improve in Sense2Sim?", optional: true },
 ];
 (function survey() {
@@ -14053,8 +14125,9 @@ const SURVEY = [
       miss: (p) => { const k = partOf(slides[p.i]); return !!k && applies(k) && !done[k]; },
       side(el, i, api) { const k = i >= 0 ? partOf(slides[i]) : ""; show(el, k && applies(k) ? k : pickK || missing()[0] || "", api); },
       foot(el, api) { const m = missing(), u = unsent();
-        el.innerHTML = `<span>${m.length ? `${m.length} set${m.length > 1 ? "s" : ""} not answered` : u.length ? `${K.length} sets answered` : "Sent ✓ Thank you"}</span><button type="button" class="fbbtn fbgo" ${m.length || !u.length || sending ? "disabled" : ""}>Submit my answers</button>`;
-        el.querySelector("button").onclick = async () => { sending = true; api.refresh();
+        el.innerHTML = `<span>${m.length ? `${m.length} set${m.length > 1 ? "s" : ""} not answered` : u.length ? `${K.length} sets answered` : "Sent ✓ Thank you"}</span>${m.length ? `<button type="button" class="fbbtn fbact">Answer ${m.length > 1 ? `the ${m.length}` : "it"} now ›</button>` : ""}<button type="button" class="fbbtn fbgo fbsubmit" ${m.length || !u.length || sending ? "disabled" : ""}>Submit my answers</button>`;
+        { const ab = el.querySelector(".fbact"); if (ab) ab.onclick = (e) => { e.stopPropagation(); ask(m, () => { api.refresh(); api.reside(); }); }; }
+        el.querySelector(".fbsubmit").onclick = async () => { sending = true; api.refresh();
           for (const k of unsent()) { send(payload(k)); done[k].sent = new Date().toISOString(); } keep(); sending = false; api.refresh(); setTimeout(() => api.close(), 900); }; },
       onclose() { revApi = null; if (then) then(); } });
   }
@@ -14069,6 +14142,9 @@ const SURVEY = [
     badge: (p) => { const k = partOf(slides[p.i]); return !k || !applies(k) ? "" : done[k] ? `<span>Survey for this part: ${esc(titleOf(k))} ✓</span>` : `<span class="fbwant">Survey for this part: ${esc(titleOf(k))}, not answered</span>`; },
     miss: (p) => { const k = partOf(slides[p.i]); return !!k && applies(k) && !done[k]; },
     ready: () => { const m = setsNow().filter((k) => !done[k]).length; return m ? `${m} survey${m > 1 ? "s" : ""} not answered` : ""; },
+    // the sets not answered, all in one card, one under another (as the last page's: the owner, 2026-11-23: “点进去，可以
+    // complete 没做的那些…把他们没做的放成一页”); only those for this reader (applies: Research Inspiration for researchers)
+    act: () => { const m = setsNow().filter((k) => !done[k]); return m.length ? { label: `Answer ${m.length > 1 ? `the ${m.length}` : "it"} now ›`, run: (redraw) => ask(m, redraw) } : null; },
     send: async () => { for (const k of unsent()) { send(payload(k)); done[k].sent = new Date().toISOString(); } keep(); },
     alone: (then) => { for (const k of unsent()) { send(payload(k)); done[k].sent = new Date().toISOString(); } keep(); if (then) then(); },
     panel(el, i, redraw) {
