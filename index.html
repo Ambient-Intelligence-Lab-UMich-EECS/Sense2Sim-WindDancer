@@ -12710,7 +12710,7 @@ const FB_H2C = "https://cdn.jsdelivr.net/npm/html2canvas-pro@1.5.8/dist/html2can
 const PAGE_THUMBS = {"about":"thumbs/about.jpg","all":"thumbs/all.jpg","c1":"thumbs/c1.jpg","c2":"thumbs/c2.jpg","demo":"thumbs/demo.jpg","exp-ablation":"thumbs/exp-ablation.jpg","exp-array":"thumbs/exp-array.jpg","exp-general":"thumbs/exp-general.jpg","exp-kg":"thumbs/exp-kg.jpg","exp-kg2":"thumbs/exp-kg2.jpg","exp-physics":"thumbs/exp-physics.jpg","exp-related":"thumbs/exp-related.jpg","exp-world":"thumbs/exp-world.jpg","explore":"thumbs/explore.jpg","gap":"thumbs/gap.jpg","how":"thumbs/how.jpg","idea":"thumbs/idea.jpg","inuse":"thumbs/inuse.jpg","level-1":"thumbs/level-1.jpg","motivation":"thumbs/motivation.jpg","open":"thumbs/open.jpg","s1":"thumbs/s1.jpg","s2":"thumbs/s2.jpg","see":"thumbs/see.jpg","sense2sim":"thumbs/sense2sim.jpg","sim-real":"thumbs/sim-real.jpg","start-2":"thumbs/start-2.jpg","start":"thumbs/start.jpg","terms":"thumbs/terms.jpg","title":"thumbs/title.jpg","use":"thumbs/use.jpg","who":"thumbs/who.jpg"};
 // what each answer says it came from: the simulation (its repository's name, Sense2Sim-<paper>), the kit's version and
 // the kind of reader (as picked on the first page, or the default kind marked "not picked"); tools/site.mjs fills S2S_SITE
-const S2S_SITE = {"name":"Sense2Sim-WindDancer","kit":"6.0.0-alpha.85","title":"WindDancer: Understanding Acoustic Sensing under Ambient Airflow","url":"https://ambient-intelligence-lab-umich-eecs.github.io/Sense2Sim-WindDancer/","build":"20261123T224657","opening":true};
+const S2S_SITE = {"name":"Sense2Sim-WindDancer","kit":"6.0.0-alpha.85","title":"WindDancer: Understanding Acoustic Sensing under Ambient Airflow","url":"https://ambient-intelligence-lab-umich-eecs.github.io/Sense2Sim-WindDancer/","build":"20261124T003453","opening":true};
 const s2sSite = () => S2S_SITE.name || (location.pathname.match(/\/(Sense2Sim-[^/]+)\//) || [])[1] || document.title;
 const s2sKit = () => S2S_SITE.kit || "";
 // A reader never works on an older page than the site's (the owner, 2026-11-22: “每次进入强制刷新浏览器缓存”): as the page
@@ -13024,6 +13024,7 @@ function s2sStudy() {
 .fbov { position: fixed; inset: 0; z-index: 75; background: var(--bg, #efe9dd); }
 .fbovtip { position: fixed; z-index: 62; width: min(380px, calc(100vw - 24px)); padding: 14px 16px; display: grid; gap: 8px; color: var(--ink, #1d2129); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.25); font: 15px/1.45 system-ui, sans-serif; } .fbovtip h3 { margin: 0; font-size: 17px; } .fbovtip p { margin: 0; } .fbovtip::after { content: ""; position: absolute; left: 22px; bottom: -9px; width: 14px; height: 14px; background: var(--panel, #fffdf8); transform: rotate(45deg); }
 .fbtour.fbcard { position: fixed; z-index: 2147483001; right: auto; bottom: auto; max-height: calc(100vh - 16px); overflow-y: auto; width: min(400px, calc(100vw - 24px)); box-sizing: border-box; margin: 0; } .fbtour h3 { margin: 2px 0 6px; } .fbtour p { margin: 0 0 10px; line-height: 1.45; } .fbtour .fbrow { display: flex; gap: 8px; align-items: center; } .fbtour .fbrow span { flex: 1; } .fbtstep { font: 700 12px/1 system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; opacity: .6; }
+.fbtblock { position: fixed; inset: 0; z-index: 2147482999; background: transparent; cursor: default; touch-action: none; }
 .fbtring { position: fixed; z-index: 2147483000; border-radius: 10px; border: 3px solid #ff8a5b; box-shadow: 0 0 0 9999px rgba(0,0,0,.45), 0 0 18px rgba(255,138,91,.8); pointer-events: none; transition: left .25s, top .25s, width .25s, height .25s; } @media (prefers-reduced-motion: reduce) { .fbov .fbtring { transition: none; } }
 .fbov.fbrev .fbboard { bottom: 100px; }
 .fbov.fbrev .fbside, .fbov.fbrev .fbbelow { display: none; } .fbov.fbrev.fbpicked .fbside, .fbov.fbrev.fbpicked .fbbelow:not(:empty) { display: grid; }
@@ -13326,36 +13327,50 @@ pre.fbpre { background: rgba(128,128,128,.08); border-radius: 8px; padding: 10px
     const tour = () => { if (document.querySelector(".fbtour")) return;
       const sum = !S2S_OVERVIEW, has = (q) => !!ov.querySelector(q), study = has('.s2ssec[data-k="questions"]'), scores = has('.s2ssec[data-k="scores"]'), notes = has('.s2ssec[data-k="notes"]');
       const steps = [
-        { at: ".fbboard", h: "Look around", p: "Move the pointer over the pages. Move fast to see them all; slow down to look closer; rest on one page to see it whole." },
-        { at: ".fbnav", h: "Pages by level", p: "The dots along the bottom are the pages, grouped by level. Point at a dot to see its page; click it to pick that page." },
-        { at: ".fbtile", h: "Pick a page", p: "Click a page. It moves to the top left, at the size you looked at it, and what belongs to it opens beside it" + (scores ? " and under it." : ".") },
-        study && { pick: 1, at: '.s2ssec[data-k="questions"]', h: "Its survey", p: "The questions of the part this page is in, with your answers. “Answer now” answers them; “Change these answers” opens them with your answers, to change." },
-        scores && { pick: 1, at: '.s2ssec[data-k="scores"]', h: "Your scores", p: "For the paper's authors: the scores you gave this page. Change any of them here; a page with none still wants its scores." },
-        notes && { pick: 1, at: '.s2ssec[data-k="notes"]', h: "Your notes", p: "Your think-aloud notes. “+ Add a note” writes one; “✎ Draw a box on this page” marks where it is about (its box shows on the page here); “+ A note on the whole page” is about all of it. Change or delete a note in its card." },
-        { pick: 1, at: ".fbside .fbgoto", or: ".fbside", h: "Go to the page", p: "“Go to this page ›” beside a picked page opens it in the simulation. Come back with the board button on the bar at the foot of the page." },
-        { at: ".fbtop", h: "Look around again", p: "With a page picked, the board stays still. Move the pointer off the page and its panels, to the top bar or the bottom bars, and the board follows the pointer again." },
-        o.miss && { at: ".fbtile.fbmiss", or: ".fbboard", h: "Orange frames", p: "A page framed in orange still wants something from you: an answer" + (scores ? " or a score" : "") + ". Its dot at the bottom is orange too." },
+        { st: "open", at: ".fbboard", h: "Look around", p: "Move the pointer over the pages. Move fast to see them all; slow down to look closer; rest on one page to see it whole." },
+        { st: "open", at: ".fbnav", h: "Pages by level", p: "The dots along the bottom are the pages, grouped by level. Point at a dot to see its page; click it to pick that page." },
+        { st: "open", at: ".fbtile", h: "Pick a page", p: "Click a page. It moves to the top left, at the size you looked at it, and what belongs to it opens beside it" + (scores ? " and under it." : ".") },
+        study && { st: "picked", at: '.s2ssec[data-k="questions"]', h: "Its survey", p: "The questions of the part this page is in, with your answers. “Answer now” answers them; “Change these answers” opens them with your answers, to change." },
+        scores && { st: "picked", at: '.s2ssec[data-k="scores"]', h: "Your scores", p: "For the paper's authors: the scores you gave this page. Change any of them here; a page with none still wants its scores." },
+        notes && { st: "picked", at: '.s2ssec[data-k="notes"]', h: "Your notes", p: "Your think-aloud notes. “+ Add a note” writes one; “✎ Draw a box on this page” marks where it is about (its box shows on the page here); “+ A note on the whole page” is about all of it. Change or delete a note in its card." },
+        { st: "picked", at: ".fbside .fbgoto", or: ".fbside", h: "Go to the page", p: "“Go to this page ›” beside a picked page opens it in the simulation. Come back with the board button on the bar at the foot of the page." },
+        { st: "picked", at: ".fbtop", h: "Look around again", p: "With a page picked, the board stays still. Move the pointer off the page and its panels, to the top bar or the bottom bars, and the board follows the pointer again." },
+        o.miss && { st: "open", at: ".fbtile.fbmiss", or: ".fbboard", h: "Orange frames", p: "A page framed in orange still wants something from you: an answer" + (scores ? " or a score" : "") + ". Its dot at the bottom is orange too." },
         has(".fbfoot .fbact") && { at: ".fbfoot .fbact", h: "Finish what is left", p: "The bottom bar says what is still missing. This button opens everything not answered yet, all in one page, one set under another." },
         has(".fbfoot .fbsubmit") && { at: ".fbfoot .fbsubmit", h: "Submit", p: "When nothing is missing, press it to send everything at once. Nothing is sent before that." + (sum ? "" : " You can also come back later.") },
         { at: ".fbtop", h: "Close, or see this again", p: "“✕ Close” (or Esc) takes you back where you were. “? How to use” shows these steps again." },
       ].filter(Boolean).filter((x) => has(x.at) || (x.or && has(x.or)));
-      let k = 0;
+      let k = 0, busy = false;
       const ring = document.createElement("div"); ring.className = "fbtring";
       const c = document.createElement("div"); c.className = "fbcard fbtour"; c.setAttribute("role", "dialog"); c.setAttribute("aria-label", "How to use this board");
-      const end = () => { ring.remove(); c.remove(); removeEventListener("resize", draw); clearInterval(gone); };
+      // while the tour runs, nothing but the tour takes the pointer, the wheel or the keys (the owner, 2026-11-24: “教程状态下除了
+      // 教程本身其他不要可以交互”): a clear sheet over the board under the card
+      const was = api.picked(), block = document.createElement("div"); block.className = "fbtblock";
+      const stop = (e) => { e.stopPropagation(); if (e.cancelable) e.preventDefault(); };
+      for (const ev of ["pointerdown", "pointermove", "pointerup", "click", "dblclick", "wheel", "touchstart", "touchmove", "contextmenu"]) block.addEventListener(ev, stop, { passive: false });
+      const keys = (e) => { if (c.contains(e.target)) return; e.stopPropagation(); e.preventDefault(); if (e.key === "Escape") end(); };
+      document.addEventListener("keydown", keys, true);
+      const end = () => { ring.remove(); c.remove(); block.remove(); document.removeEventListener("keydown", keys, true); removeEventListener("resize", draw); clearInterval(gone);
+        if (!ov.isConnected) return; if (was >= 0) api.show(was); else api.unpick(); };
       const gone = setInterval(() => { if (!ov.isConnected) end(); }, 400);
       function draw() {
         const S = steps[k];
-        // a step about a picked page's panels picks one (the page the reader was on), so what it names is there to see
-        if (S.pick && !ov.classList.contains("fbpicked")) { try { api.show(P.some((x) => x.i === cur) ? cur : P[0].i); } catch (e) {} return setTimeout(draw, 700); }
+        // each step sets the board as it needs it (the owner, 2026-11-24: “教程的每一步你都预设好”): a step about a picked page's
+        // panels picks one (the page the reader was on), a step about the board as a whole lets it go; the board is put back as
+        // it was when the tour ends
+        // (while the board moves to it, the card and the ring wait out of sight and take no press)
+        const wait = () => { busy = true; c.style.visibility = ring.style.visibility = "hidden"; setTimeout(() => { busy = false; if (c.isConnected) draw(); }, 700); };
+        if (S.st === "picked" && api.picked() < 0) { try { api.show(P.some((x) => x.i === cur) ? cur : P[0].i); } catch (e) {} return wait(); }
+        if (S.st === "open" && api.picked() >= 0) { api.unpick(); return wait(); }
+        c.style.visibility = ring.style.visibility = "";
         const vis = (q) => { const e = q && ov.querySelector(q); return e && e.getBoundingClientRect().width > 4 ? e : null; };
         const el = vis(S.at) || vis(S.or) || ov.querySelector(".fbboard"), r = el.getBoundingClientRect(), W = innerWidth, H = innerHeight, pad = 6;
         const R = { x: Math.max(4, r.left - pad), y: Math.max(4, r.top - pad), w: Math.min(W - 8, r.width + 2 * pad), h: Math.min(H - 8, r.height + 2 * pad) };
         Object.assign(ring.style, { left: R.x + "px", top: R.y + "px", width: R.w + "px", height: R.h + "px" });
         c.innerHTML = `<div class="fbtstep">Step ${k + 1} of ${steps.length}</div><h3>${S.h}</h3><p>${S.p}</p><div class="fbrow"><button class="fbbtn" type="button" data-t="skip">Skip</button><span></span>${k ? `<button class="fbbtn" type="button" data-t="back">‹ Back</button>` : ""}<button class="fbbtn fbprimary" type="button" data-t="next">${k < steps.length - 1 ? "Next ›" : "Got it"}</button></div>`;
         c.querySelector('[data-t="skip"]').onclick = (e) => { e.stopPropagation(); end(); };
-        const bk = c.querySelector('[data-t="back"]'); if (bk) bk.onclick = (e) => { e.stopPropagation(); k--; draw(); };
-        c.querySelector('[data-t="next"]').onclick = (e) => { e.stopPropagation(); if (k < steps.length - 1) { k++; draw(); } else end(); };
+        const bk = c.querySelector('[data-t="back"]'); if (bk) bk.onclick = (e) => { e.stopPropagation(); if (busy) return; k--; draw(); };
+        c.querySelector('[data-t="next"]').onclick = (e) => { e.stopPropagation(); if (busy) return; if (k < steps.length - 1) { k++; draw(); } else end(); };
         // the card beside the ring, never over it: below, above, right, left, whichever has room; else in the middle of the
         // screen's largest free side
         c.style.left = c.style.top = "0px"; const cw = c.offsetWidth, ch = c.offsetHeight, g = 12;
@@ -13367,8 +13382,8 @@ pre.fbpre { background: rgba(128,128,128,.08); border-radius: 8px; padding: 10px
         c.querySelector('[data-t="next"]').focus({ preventScroll: true });
       }
       for (const ev of ["click", "pointerdown", "pointermove", "keydown"]) { c.addEventListener(ev, (e) => e.stopPropagation()); ring.addEventListener(ev, (e) => e.stopPropagation()); }
-      c.addEventListener("keydown", (e) => { if (e.key === "Escape") end(); else if (e.key === "ArrowRight") c.querySelector('[data-t="next"]').click(); else if (e.key === "ArrowLeft" && k) { k--; draw(); } });
-      document.body.append(ring, c); draw(); addEventListener("resize", draw); };
+      c.addEventListener("keydown", (e) => { if (e.key === "Escape") end(); else if (e.key === "ArrowRight") c.querySelector('[data-t="next"]').click(); else if (e.key === "ArrowLeft" && k && !busy) { k--; draw(); } });
+      document.body.append(block, ring, c); draw(); addEventListener("resize", draw); };
     if (o) { const hb = document.createElement("button"); hb.type = "button"; hb.className = "fbbtn fbhow"; hb.dataset.k = "how"; hb.textContent = "? How to use"; hb.onclick = (e) => { e.stopPropagation(); tour(); };
       const tb = ov.querySelector(".fbtop"); tb.insertBefore(hb, tb.querySelector("span"));
       // (after the board's panels are drawn; not in the kit's own browsers, whose stills are of the board itself, unless ?tour=1)
@@ -13401,6 +13416,7 @@ pre.fbpre { background: rgba(128,128,128,.08); border-radius: 8px; padding: 10px
       addEventListener("resize", () => { if (picked >= 0 && document.body.contains(ov)) B.pin(picked, layout(picked)); });
     }
     const api = { pages: P, below, close: () => closeBoard(), show: (i) => { clearTimeout(dwellT); pickPage(i); }, peek: (i) => B.show(i),
+      picked: () => picked, unpick: () => { clearTimeout(dwellT); unpick(); },
       reside() { if (side && o && o.side) o.side(side, at, api); }, // the panel beside the board drawn again, for the page it shows
       refresh() { if (!o) return; for (const t of ov.querySelectorAll(".fbtile")) { const p = P[+t.dataset.p]; t.querySelector(".fbbadge").innerHTML = o.badge ? o.badge(p) || "" : "";
           { let bx = t.querySelector(".fbboxes"); if (!bx) { bx = document.createElement("span"); bx.className = "fbboxes"; t.append(bx); } bx.innerHTML = (o.boxes ? o.boxes(p) || [] : []).map((b) => `<i style="left:${b.rect[0]}%;top:${b.rect[1]}%;width:${b.rect[2]}%;height:${b.rect[3]}%"><b>${b.n}</b></i>`).join(""); } t.classList.toggle("fbmiss", !!(o.miss && o.miss(p))); }
@@ -13514,11 +13530,11 @@ const AU_FONT = (typeof document !== "undefined" && getComputedStyle(document.do
 .aucard .auin { padding: 12px; display: grid; gap: 12px; }
 .aum { display: grid; gap: 6px; } .aum .aulab { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
 .aum .aulab b { font: 600 16px system-ui, sans-serif; text-transform: uppercase; letter-spacing: .06em; } .aum .aulab span { font-size: 14px; opacity: .7; }
-.ausc { display: grid; grid-template-columns: 1.15fr repeat(5, 1fr); gap: 6px; } /* N/A first, left of 1 */ .ausc button.auna { font-size: 14px; }
+.ausc { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; } /* 1 to 5, no N/A (the owner, 2026-11-24) */ .ausc button.auna { font-size: 14px; }
 .ausc button { all: unset; cursor: pointer; text-align: center; font: 600 18px ${AU_FONT}; padding: 6px 0; border: 1px solid rgba(128,128,128,.4); border-radius: 8px; }
 .ausc button:hover { border-color: currentColor; } .ausc button:focus-visible, .aubtn:focus-visible, .aupill:focus-visible, .aucell:focus-visible { outline: 2px solid #2f6fb3; outline-offset: 2px; }
 .aum.aua .auon { background: #1f8a4c; border-color: #1f8a4c; color: #fff; } .aum.auq .auon { background: #2453a6; border-color: #2453a6; color: #fff; }
-.auends { display: grid; grid-template-columns: 1.15fr repeat(5, 1fr); gap: 6px; font-size: 13px; opacity: .7; } .auends span:first-child { grid-column: 2 / span 2; } .auends span:last-child { grid-column: 5 / span 2; text-align: right; }
+.auends { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; font-size: 13px; opacity: .7; } .auends span:first-child { grid-column: 1 / span 2; } .auends span:last-child { grid-column: 4 / span 2; text-align: right; }
 .aufoot { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; } .aufoot .auprog { flex: 1 1 110px; display: grid; gap: 4px; font-size: 14px; opacity: .85; }
 .aufoot .aubar { height: 6px; background: rgba(128,128,128,.3); border-radius: 3px; overflow: hidden; } .aufoot .aubar i { display: block; height: 100%; background: #7a5a12; }
 .aubtn { font: 500 17px system-ui, sans-serif; border: 1px solid rgba(128,128,128,.4); background: transparent; color: inherit; border-radius: 8px; padding: 6px 12px; cursor: pointer; }
@@ -13737,7 +13753,7 @@ const AU_FONT = (typeof document !== "undefined" && getComputedStyle(document.do
     c.innerHTML = `<span class="aueye">Paper authors</span><h2 id="auintroh">Score each page of the simulation</h2>
       <dl class="audl"><dt class="aua">Accurate</dt><dd>Does the page match your paper? 1–5</dd><dt class="auq">Quality</dt><dd>Is the page clear and well made? 1–5</dd></dl>
       <p class="auh">How</p>
-      <ol><li>At the end of each page, a card asks for both scores.</li><li>Click a number, or press 1–5; N/A (or 0) when it does not apply.</li><li>The next page opens once both are given.</li><li>“Author check” (bottom left) opens the card at any time; a press outside closes it.</li><li>When every page is rated, your certificate opens.</li></ol>
+      <ol><li>At the end of each page, a card asks for both scores.</li><li>Click a number, or press 1–5.</li><li>The next page opens once both are given.</li><li>“Author check” (bottom left) opens the card at any time; a press outside closes it.</li><li>When every page is rated, your certificate opens.</li></ol>
       <p class="auh">Your certificate</p>
       <div class="aurow"><span class="aumini"></span><p>Upper curve: Accurate. Lower curve: Quality. Sign it and send it to the Sense2Sim team.</p></div>
       <p style="font-size:16px;opacity:.7">Comments go in the notes (the S, bottom right).</p>
@@ -13774,7 +13790,7 @@ const AU_FONT = (typeof document !== "undefined" && getComputedStyle(document.do
     if (!here()) { const i = nextToScore(); if (i < 0) return; closeCard(); go(i, 0); }
     const id = pid(), s = scores[id] || {}, n = rated(), R = rateable(), N = R.length, P = allPages(), k = R.findIndex((p) => p.i === cur) + 1, lastOne = R.length && R[R.length - 1].i === cur;
     card = document.createElement("div"); card.className = "aucard"; card.setAttribute("role", "dialog"); card.setAttribute("aria-label", "Author check");
-    const scale = (k) => ["na", 1, 2, 3, 4, 5].map((v) => `<button type="button" data-k="${k}" data-v="${v}" class="${s[k] === v ? "auon" : ""}${v === "na" ? " auna" : ""}" aria-label="${k === "a" ? "Accurate" : "Quality"} ${v === "na" ? "not applicable" : v}" aria-pressed="${s[k] === v}">${v === "na" ? "N/A" : v}</button>`).join("");
+    const scale = (k) => [1, 2, 3, 4, 5].map((v) => `<button type="button" data-k="${k}" data-v="${v}" class="${s[k] === v ? "auon" : ""}${v === "na" ? " auna" : ""}" aria-label="${k === "a" ? "Accurate" : "Quality"} ${v === "na" ? "not applicable" : v}" aria-pressed="${s[k] === v}">${v === "na" ? "N/A" : v}</button>`).join("");
     card.innerHTML = `<header><b>Author check</b><span>Page ${k} / ${N} · ${esc(P[cur].name)}</span><button class="auhow" type="button" data-x="how">How it works</button></header><div class="auin">
       <div class="aum aua"><div class="aulab"><b>Accurate</b><span>Does this page say what the paper says?</span></div><div class="ausc">${scale("a")}</div><div class="auends"><span>1 · wrong</span><span>5 · exactly right</span></div></div>
       <div class="aum auq"><div class="aulab"><b>Quality</b><span>Is it clear and well made?</span></div><div class="ausc">${scale("q")}</div><div class="auends"><span>1 · poor</span><span>5 · excellent</span></div></div>
@@ -13860,7 +13876,7 @@ const AU_FONT = (typeof document !== "undefined" && getComputedStyle(document.do
       if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); closeCert(); } else if (!sheet.contains(e.target)) e.stopPropagation();
       return;
     }
-    if (card && /^[0-5]$/.test(e.key) && !e.target.matches("input, textarea")) { const id = pid(), k = scores[id] && scores[id].a ? "q" : "a"; const b = card.querySelector(`[data-k="${k}"][data-v="${e.key === "0" ? "na" : e.key}"]`); if (b) { e.preventDefault(); e.stopPropagation(); b.click(); } }
+    if (card && /^[1-5]$/.test(e.key) && !e.target.matches("input, textarea")) { const id = pid(), k = scores[id] && scores[id].a ? "q" : "a"; const b = card.querySelector(`[data-k="${k}"][data-v="${e.key === "0" ? "na" : e.key}"]`); if (b) { e.preventDefault(); e.stopPropagation(); b.click(); } }
   }, true);
   // ---------------------------------------------------------------- the certificate
   let sheet = null, M = null;
@@ -13885,7 +13901,7 @@ const AU_FONT = (typeof document !== "undefined" && getComputedStyle(document.do
         const p = i >= 0 ? api.pages[i] : null;
         if (!p) { el.innerHTML = `<h3>Your scores</h3><p>${R.length} pages carry the paper's content. ${left() ? `<b>${left()} not scored yet</b>: they are framed in orange.` : "All are scored."}</p><p class="fbdim">Click a page to give or change its scores here. Nothing is sent before you confirm.</p>`; return; }
         if (!has(i)) { el.innerHTML = `<h3>${esc(p.name)}</h3><p class="fbdim">Page ${i + 1}. This page has none of the paper's content: it takes no scores.</p>`; return; }
-        const s = scores[p.id] || {}, scale = (k) => ["na", 1, 2, 3, 4, 5].map((v) => `<button type="button" data-k="${k}" data-v="${v}" class="${s[k] === v ? "auon" : ""}${v === "na" ? " auna" : ""}" aria-pressed="${s[k] === v}">${v === "na" ? "N/A" : v}</button>`).join("");
+        const s = scores[p.id] || {}, scale = (k) => [1, 2, 3, 4, 5].map((v) => `<button type="button" data-k="${k}" data-v="${v}" class="${s[k] === v ? "auon" : ""}${v === "na" ? " auna" : ""}" aria-pressed="${s[k] === v}">${v === "na" ? "N/A" : v}</button>`).join("");
         el.innerHTML = `<h3>${esc(p.name)}</h3><p class="fbdim">Page ${i + 1} · ${done(p.id) ? "scored" : "<b>not scored yet</b>"}</p>
           <div class="aum aua"><div class="aulab"><b>Accurate</b><span>Does this page say what the paper says?</span></div><div class="ausc">${scale("a")}</div></div>
           <div class="aum auq"><div class="aulab"><b>Quality</b><span>Is it clear and well made?</span></div><div class="ausc">${scale("q")}</div></div>
@@ -13947,7 +13963,7 @@ const AU_FONT = (typeof document !== "undefined" && getComputedStyle(document.do
       if (i < 0) { const n = R.filter((p) => !done(p.id)).length; el.innerHTML = `<p>${n ? `<b>${n} of ${R.length} pages not scored</b>: framed in orange on the board.` : `All ${R.length} pages scored.`}</p><label class="fbdim" for="s2ssign">Your name, as it shows on the certificate</label><input id="s2ssign" class="s2sname" value="${esc(signer || s2sUser())}">`;
         el.querySelector("#s2ssign").addEventListener("change", (e) => { signer = e.target.value.trim(); keep(); }); return; }
       if (!R.some((r) => r.i === i)) { el.innerHTML = `<p class="fbdim">This page has none of the paper's content: it takes no scores.</p>`; return; }
-      const id = P[i].id, s = scores[id] || {}, scale = (k) => ["na", 1, 2, 3, 4, 5].map((v) => `<button type="button" data-k="${k}" data-v="${v}" class="${s[k] === v ? "auon" : ""}${v === "na" ? " auna" : ""}" aria-pressed="${s[k] === v}">${v === "na" ? "N/A" : v}</button>`).join("");
+      const id = P[i].id, s = scores[id] || {}, scale = (k) => [1, 2, 3, 4, 5].map((v) => `<button type="button" data-k="${k}" data-v="${v}" class="${s[k] === v ? "auon" : ""}${v === "na" ? " auna" : ""}" aria-pressed="${s[k] === v}">${v === "na" ? "N/A" : v}</button>`).join("");
       el.innerHTML = `<div class="aum aua"><div class="aulab"><b>Accurate</b><span>Does this page say what the paper says?</span></div><div class="ausc">${scale("a")}</div></div><div class="aum auq"><div class="aulab"><b>Quality</b><span>Is it clear and well made?</span></div><div class="ausc">${scale("q")}</div></div>`;
       el.querySelectorAll(".ausc button").forEach((b) => b.onclick = () => { scores[id] = Object.assign({}, scores[id], { [b.dataset.k]: b.dataset.v === "na" ? "na" : +b.dataset.v, at: new Date().toISOString() }); keep(); paint(); redraw(); });
     } });
@@ -13964,31 +13980,31 @@ const AU_FONT = (typeof document !== "undefined" && getComputedStyle(document.do
 // 2026-11-21: “在这里比较合适”), then Research inspiration (sensing researchers only) and Overall at the last page.
 // The bar at the foot of the page marks where each set comes (the owner: “把questionnaire也放到下面坐标bar上，用其他颜
 // 色表示”): an orange diamond after its page, hollow until answered; pressed, it opens its sets (the owner: “问卷也能通过
-// 点击呼出”), those answered with their answers, to change. Each set asks for its ratings, 1–5 or N/A
-// (N/A counts in no average), and a few words; the next page waits until every rating is given. A set already
+// 点击呼出”), those answered with their answers, to change. Each set asks for its ratings, 1–5 (no N/A: the owner,
+// 2026-11-24: “所有user study 啊打分啊，N/A这个选项都不要了”), and a few words; the next page waits until every rating is given. A set already
 // answered is not asked again (kept in the browser). Each set is sent as soon as it is answered to the lab's
 // collection (FEEDBACK_URL, js/feedback.js; tools/feedback/Code.gs, the sheet's tab “survey”, one row for each answer).
 // The page that asks who the reader is lets no one past it before a kind is picked.
 // A simulation without a part (no Sensing Universe page, say) does not ask about it. ?survey=0 turns it off; the
 // kit's own browsers (navigator.webdriver) do not see it unless the address asks, ?survey=1.
 const SURVEY = [
-  { key: "intro", title: "Intro", about: "The paper's story: the problem, where it is used, its core idea and the real system.", na: true,
+  { key: "intro", title: "Intro", about: "The paper's story: the problem, where it is used, its core idea and the real system.", na: false,
     q: [["Ease of Use", "The Intro section was easy to use."], ["Usefulness", "The Intro helped me understand the sensing method presented in the paper."], ["Clarity", "The Intro made clear what problem the method solves and where it could be used."]],
     text: "What was helpful or confusing about the Intro? What could be improved?" },
-  { key: "sim", title: "Simulator", about: "The challenges, the paper's solutions, and the end-to-end simulator.", na: true,
+  { key: "sim", title: "Simulator", about: "The challenges, the paper's solutions, and the end-to-end simulator.", na: false,
     q: [["Ease of Use", "The Simulator was easy to interact with."], ["Usefulness", "The Simulator helped me understand how the sensing method works."], ["Interaction Clarity", "I could understand how changing parameters affected the simulated results."], ["Trust", "I trust that the simulated results reflect how the real system would behave."]],
     text: "What was helpful or confusing when interacting with the Simulator? What could be improved?" },
-  { key: "universe", title: "Sensing Universe", about: "This paper among other sensing research.", na: true,
+  { key: "universe", title: "Sensing Universe", about: "This paper among other sensing research.", na: false,
     q: [["Ease of Use", "Sensing Universe was easy to interact with."], ["Usefulness", "Sensing Universe helped me see how this paper relates to other sensing research."], ["Clarity", "I could understand how the information in Sensing Universe was organized."]],
     text: "What was helpful or confusing about Sensing Universe? What information or interactions would make it more useful?" },
-  { key: "world", title: "Sensing World", about: "The sensing method in everyday scenes.", na: true,
+  { key: "world", title: "Sensing World", about: "The sensing method in everyday scenes.", na: false,
     q: [["Ease of Use", "Sensing World was easy to interact with."], ["Usefulness", "Sensing World helped me explore how sensing could be used in different scenarios."], ["Clarity", "I could understand what each scenario represented."]],
     text: "What was helpful or confusing about Sensing World? What would make it easier to explore different scenarios?" },
-  { key: "explore", title: "Exploration", about: "Studies that go beyond the paper: Real-to-Sim Gap, Ablation, Comparison with Related Work, Generalization, Physical Conditions, Optimal Setup / Placement.", na: true,
+  { key: "explore", title: "Exploration", about: "Studies that go beyond the paper: Real-to-Sim Gap, Ablation, Comparison with Related Work, Generalization, Physical Conditions, Optimal Setup / Placement.", na: false,
     picks: ["Real-to-Sim Gap Study", "Ablation Study", "Comparison with Related Work", "Generalization Study", "Physical Conditions Study", "Optimal Setup / Placement Study"],
     q: [["Ease of Use", "The studies in Exploration were easy to use."], ["Navigation", "I could easily find the studies and move between them."], ["Usefulness", "The studies helped me investigate aspects of the sensing method that the paper alone does not show."], ["Study Selection Clarity", "I could understand the purpose of each study."]],
     text: "Was anything confusing or overwhelming when choosing between or using the different studies? What would make Exploration easier to navigate or understand?" },
-  { key: "inspire", title: "Research Inspiration", about: "For sensing researchers.", na: true, researchers: true,
+  { key: "inspire", title: "Research Inspiration", about: "For sensing researchers.", na: false, researchers: true,
     ask: "To what extent did each section inspire you to consider a new sensing research question, application, experiment, or user study?",
     q: "parts", // one row for each part of the simulation this reader met
     text: "Did Sense2Sim inspire any new sensing research questions, applications, experiments, or user study ideas? If yes, briefly describe one idea and which section inspired it. If not, you may write “None.”" },
@@ -14057,7 +14073,7 @@ const SURVEY = [
       ${S.ask ? `<p class="svask">${esc(S.ask)}</p>` : ""}
       ${t.rows.map((r, i) => `<div class="svq"><div class="svlab">${S.q === "parts" ? `<b>${esc(r[0])}</b>` : `<b>${esc(r[0])}</b><span>${esc(r[1])}</span>`}</div>${scale(t, i)}</div>`).join("")}
       <div class="svq"><label for="svtext${t.n}">${esc(S.text)}${S.optional ? " (optional)" : ""}</label><textarea id="svtext${t.n}" data-s="${t.n}"></textarea></div></section>`; };
-    c.innerHTML = sets.map(part).join(`<hr class="svsep">`) + `<div class="svfoot"><span>Every rating is needed; N/A when it does not apply.${sets.length > 1 ? ` ${sets.length} sets: scroll for all.` : ""}</span><button class="svbtn" type="button" disabled>Continue</button></div>`;
+    c.innerHTML = sets.map(part).join(`<hr class="svsep">`) + `<div class="svfoot"><span>Every rating is needed.${sets.length > 1 ? ` ${sets.length} sets: scroll for all.` : ""}</span><button class="svbtn" type="button" disabled>Continue</button></div>`;
     document.body.append(sh, c);
     const next = c.querySelector(".svbtn"), ready = () => sets.every((t) => t.rows.every((_, i) => t.ans.r[i] != null) && (!t.S.picks || t.ans.picks.size > 0));
     c.querySelectorAll(".svsc button").forEach((b) => b.onclick = (e) => { e.stopPropagation(); const t = sets[+b.dataset.s], i = +b.dataset.i; t.ans.r[i] = b.dataset.v;
