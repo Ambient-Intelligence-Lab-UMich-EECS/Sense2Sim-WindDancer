@@ -1473,6 +1473,7 @@ h1, h2 { font-family: var(--serif); font-weight: 600; letter-spacing: -.01em; }
 .slide .text .later { display: none !important; }
 .allctl { align-self: flex-start; margin: -4px 0 16px 50px; padding: 2px 0; border: 0; background: none; font: 500 16px/1.2 var(--font); color: var(--ink-3); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .allctl:is(:hover, :focus-visible) { color: var(--act); outline: none; }
+.allctl.again { margin-top: -12px; } /* “Start again”, under “Show all controls”, kept in sight when that hides */
 .allctl[hidden] { display: none; }
 .tabs.turn { align-items: center; }
 .tabs.turn span[data-tab] { font-size: 20px; padding: 10px 14px; }
@@ -11235,10 +11236,18 @@ function syncControls(id) {
 // A preset (pages.mjs, a control's preset): several controls set at once, each as if the reader had set it, in the
 // order given. While it sets them the page knows which of the changes this is (st.pre: { i, n }), so a page that
 // starts again on a change does so once (js/explore.js, an ablation's try).
-function applyPreset(id, el) {
-  const st = SIMS[id], to = JSON.parse(el.dataset.to), ks = Object.keys(to).filter((k) => st.ctl[k] !== to[k]);
+// A preset pressed again, while it stands, takes its changes back: the controls return to what they were before it
+// (the owner, 2026-11-28: “很多点了之后就不能取消了，是单向的按键”). Nothing a reader presses is one way.
+function setMany(id, to) {
+  const st = SIMS[id], ks = Object.keys(to).filter((k) => st.ctl[k] !== to[k]);
   ks.forEach((k, i) => { st.pre = { i, n: ks.length }; onControl(id, k, to[k]); });
   delete st.pre;
+}
+function applyPreset(id, el) {
+  const st = SIMS[id], to = JSON.parse(el.dataset.to), name = el.dataset.preset; st.undo = st.undo || {};
+  if (el.getAttribute("aria-pressed") === "true" && st.undo[name]) { setMany(id, st.undo[name]); delete st.undo[name]; syncControls(id); lightBy(id, "preset", name, el); return; }
+  st.undo[name] = Object.fromEntries(Object.keys(to).filter((k) => k !== "auto" && st.ctl[k] !== to[k]).map((k) => [k, st.ctl[k]]));
+  setMany(id, to);
   if (PAGES[id].preset) PAGES[id].preset(el.dataset.preset, st);
   syncControls(id); lightBy(id, "preset", el.dataset.preset, el); turnUsed(id, "pre:" + el.dataset.preset);
 }
@@ -11249,6 +11258,13 @@ for (const sec of document.querySelectorAll(".slide.sim")) {
     else el.addEventListener("input", () => { onControl(id, el.dataset.ctl, +el.value); syncControls(id); lightBy(id, el.dataset.ctl, undefined, el); turnUsed(id, "ctl:" + el.dataset.ctl); });
   }
   for (const el of sec.querySelectorAll("[data-preset]")) el.addEventListener("click", (e) => { e.stopPropagation(); applyPreset(id, el); });
+  // “Start again” beside “Show all controls”: every control back to where the page began, the subject at its rest
+  for (const all of sec.querySelectorAll(".allctl")) {
+    const b = document.createElement("button"); b.type = "button"; b.className = "allctl again"; b.textContent = "↺ Start again";
+    b.title = "Every control back to where this page began";
+    b.addEventListener("click", (e) => { e.stopPropagation(); const st = SIMS[id]; if (!st) return; st.undo = {}; setMany(id, Object.fromEntries(Object.entries(st.ctl0).filter(([k]) => k !== "auto"))); st.rest = st.cfg.rest.slice(); syncControls(id); });
+    all.after(b);
+  }
   for (const el of sec.querySelectorAll("[data-act]")) el.addEventListener("click", (e) => { e.stopPropagation(); if (el.dataset.act === "reset") SIMS[id].reset(); if (el.dataset.act === "clear" && PAGES[id].clear) PAGES[id].clear(); if (SIMS[id].act) { SIMS[id].act(el.dataset.act); syncControls(id); } lightBy(id, el.dataset.act, undefined, el); turnUsed(id, "act:" + el.dataset.act); });
   syncControls(id);
 }
@@ -12679,9 +12695,10 @@ const FB_H2C = "https://cdn.jsdelivr.net/npm/html2canvas-pro@1.5.8/dist/html2can
 const PAGE_THUMBS = {"about":"thumbs/about.jpg","all":"thumbs/all.jpg","c1":"thumbs/c1.jpg","c2":"thumbs/c2.jpg","demo":"thumbs/demo.jpg","exp-ablation":"thumbs/exp-ablation.jpg","exp-array":"thumbs/exp-array.jpg","exp-general":"thumbs/exp-general.jpg","exp-kg":"thumbs/exp-kg.jpg","exp-kg2":"thumbs/exp-kg2.jpg","exp-physics":"thumbs/exp-physics.jpg","exp-related":"thumbs/exp-related.jpg","exp-world":"thumbs/exp-world.jpg","explore":"thumbs/explore.jpg","gap":"thumbs/gap.jpg","how":"thumbs/how.jpg","idea":"thumbs/idea.jpg","inuse":"thumbs/inuse.jpg","level-1":"thumbs/level-1.jpg","motivation":"thumbs/motivation.jpg","open":"thumbs/open.jpg","s1":"thumbs/s1.jpg","s2":"thumbs/s2.jpg","see":"thumbs/see.jpg","sense2sim":"thumbs/sense2sim.jpg","sim-real":"thumbs/sim-real.jpg","start-2":"thumbs/start-2.jpg","start":"thumbs/start.jpg","terms":"thumbs/terms.jpg","title":"thumbs/title.jpg","use":"thumbs/use.jpg","who":"thumbs/who.jpg"};
 // what each answer says it came from: the simulation (its repository's name, Sense2Sim-<paper>), the kit's version and
 // the kind of reader (as picked on the first page, or the default kind marked "not picked"); tools/site.mjs fills S2S_SITE
-const S2S_SITE = {"name":"Sense2Sim-WindDancer","kit":"6.0.0-alpha.85","title":"WindDancer: Understanding Acoustic Sensing under Ambient Airflow","url":"https://ambient-intelligence-lab-umich-eecs.github.io/Sense2Sim-WindDancer/","build":"20261128T193804","opening":true};
+const S2S_SITE = {"name":"Sense2Sim-WindDancer","kit":"6.0.0-alpha.85","title":"WindDancer: Understanding Acoustic Sensing under Ambient Airflow","url":"https://ambient-intelligence-lab-umich-eecs.github.io/Sense2Sim-WindDancer/","build":"20261128T203946","opening":true};
 const s2sSite = () => S2S_SITE.name || (location.pathname.match(/\/(Sense2Sim-[^/]+)\//) || [])[1] || document.title;
-const s2sKit = () => S2S_SITE.kit || "";
+// (with the page's build: a note names the very version it was written on, so a step moved since can be found; the owner, 2026-11-28)
+const s2sKit = () => [S2S_SITE.kit, S2S_SITE.build].filter(Boolean).join(" · ");
 // A reader never works on an older page than the site's (the owner, 2026-11-22: “每次进入强制刷新浏览器缓存”): as the page
 // opens it asks the site's version.json, never from a cache; where that names a newer build than this page's, the page
 // is loaded again once, at an address the caches have not seen (?v=<build>).
