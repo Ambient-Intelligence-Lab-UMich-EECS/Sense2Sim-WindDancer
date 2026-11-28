@@ -833,7 +833,7 @@
         var sxp = uniC[0] + S.pos[kP * 2] * uniS, syp = uniC[1] + S.pos[kP * 2 + 1] * uniS;
         if (L.k !== kP) { L.k = kP; L.el.textContent = (PAPER.short || "this paper") + " · this paper"; L.el.classList.add("me"); L.w = L.el.offsetWidth; L.h = L.el.offsetHeight; }
         var lit = Math.max(aP, HOWLIT[1] || 0);
-        // in its box (the “how it works” view), the star alone is lit and its name is not shown (the owner, 2026-11-24, Seismo:
+        // in its box (the “how it works” view), the star alone is lit and its name is not shown (the owner, 2026-11-24, a paper:
         // “这个论文在很左边，所以这个this paper就截断了…在这个视图下，就不用显示this paper了，星系就行”)
         place(L.el, sxp + 14, syp - L.h / 2, s > 0.3 ? 0 : aP);
         hiK[0] = kP; hiA[0] = Math.max(lit, 0.35 * seg(p, 0.6, 0.66)); return;

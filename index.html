@@ -1010,7 +1010,7 @@ body.nobar #dots { opacity: 0; pointer-events: none; }
 /* the papers with the same use, as a small graph out of the knowledge graph: the use in the middle, device-free papers on the
    left, device-based on the right; a paper's colour is its modality (as in the Sensing Universe); dashed: the graph's citations */
 /* the Sensing World's kinds in the Sensing Universe's own colours (js/universe.js, UV_MOD; the opening's galaxies), so a kind
-   has one colour on every page (SurfaceVibe's and Seismo's builds, 2026-11-22: gold was Acoustic here and Magnetic on the
+   has one colour on every page (two builds, 2026-11-22: gold was Acoustic here and Magnetic on the
    knowledge graph) */
 .slide[data-kind="world"] { --mod-Acoustic: #d9f272; --mod-RF: #6b98ff; --mod-Optical: #ff8a5b; --mod-Electric: #c7a2ff; --mod-Magnetic: #f0c674; --mod-Mechanical: #aab5c7; }
 :root[data-theme="light"] .slide[data-kind="world"] { --mod-Acoustic: #6a8a00; --mod-RF: #2c5fd6; --mod-Optical: #d6501f; --mod-Electric: #7a4ccc; --mod-Magnetic: #b07c08; --mod-Mechanical: #5a677d; }
@@ -1038,7 +1038,7 @@ body.nobar #dots { opacity: 0; pointer-events: none; }
 .slide[data-kind="world"] .wn.l i { grid-column: 2; }
 .slide[data-kind="world"] .wn.l b, .slide[data-kind="world"] .wn.l span { grid-column: 1; }
 .slide[data-kind="world"] .wn b { font: 700 18px/1.15 var(--font); }
-.slide[data-kind="world"] .wn b sup { display: inline-block; height: 15px; overflow: hidden; margin-left: 4px; font-size: 14px; line-height: 15px; vertical-align: .3em; color: var(--ink-3); } /* (the room mark kept inside its name's line: MoiréWidgets' “⌂” touched the line under it) */
+.slide[data-kind="world"] .wn b sup { display: inline-block; height: 15px; overflow: hidden; margin-left: 4px; font-size: 14px; line-height: 15px; vertical-align: .3em; color: var(--ink-3); } /* (the room mark kept inside its name's line: a paper's “⌂” touched the line under it) */
 .slide[data-kind="world"] .wn span { font-size: 15px; line-height: 1.22; color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .slide[data-kind="world"] .wn.me i { width: 20px; height: 20px; box-shadow: 0 0 0 6px color-mix(in srgb, var(--c) 26%, transparent); }
 .slide[data-kind="world"] .wn.me b { font-size: 22px; }
@@ -8301,7 +8301,7 @@ function uvDraw(g, ctx, w, h) {
   g.globalAlpha = 1; g.font = `700 36px ${FONT}`; g.textAlign = "left"; g.fillStyle = PAL.ink;
   if (UV.gapA > 0.5) { g.textAlign = "center"; uvT(g, KG.name, mx, my + 58); }
   else {
-    // (on the star's left where its name would run past the window's right edge: WindDancer's, near the Acoustic rim)
+    // (on the star's left where its name would run past the window's right edge: a paper's, near the Acoustic rim)
     const vw = `${me.p.venue || me.p.year || ""}`, nw = g.measureText(KG.name).width; g.font = `500 20px ${MONO}`; const ww = Math.max(nw, g.measureText(vw).width); g.font = `700 36px ${FONT}`;
     const right = g.canvas.width / ((g.getTransform && g.getTransform().a) || 1), left = mx + 32 + ww > right - 16;
     g.textAlign = left ? "right" : "left"; const lx = left ? mx - 32 : mx + 32;
@@ -9763,6 +9763,8 @@ function guideTarget(s, at) {
   const mark = m[1] === "ro" && el.matches(".ros .ro") ? el : null, box = mark ? el.closest(".ros") : el;
   const r = box.getBoundingClientRect(), st = stage.getBoundingClientRect(), k = st.width / 1920;
   if (r.width < 1 || r.height < 1) return null;
+  // (a target its scrolling column hides: no ring round the empty place)
+  { const sc = box.closest(".fitscroll"); if (sc) { const cr = sc.getBoundingClientRect(); if (r.bottom > cr.bottom + 2 || r.top < cr.top - 2) return null; } }
   return [(r.left - st.left) / k - RING_PAD, (r.top - st.top) / k - RING_PAD, r.width / k + 2 * RING_PAD, r.height / k + 2 * RING_PAD, mark, el];
 }
 // More controls (pages.mjs, morectl) folds again at a press outside it: open, it lies over the lines above, the
@@ -9775,11 +9777,11 @@ document.addEventListener("pointerdown", (e) => { for (const d of document.query
 function fitColumn(s) {
   const t = s && s.querySelector(":scope > .text, .only:not([hidden]) > .text"); if (!t || !t.getClientRects().length) return;
   // measured in the stage's own layout (offsetTop/offsetHeight): what an entrance animation moves or scales is not counted,
-  // so every load, at any moment, fits the column the same way (MoiréLens, 2026-11-23: “Time filter” shown on some loads only)
+  // so every load, at any moment, fits the column the same way (a paper, 2026-11-23: “Time filter” shown on some loads only)
   const oy = (el) => { let y = 0; for (let x = el; x && x !== stage; x = x.offsetParent) y += x.offsetTop; return y; };
   const shown = (el) => el.getClientRects().length > 0;
   // the limit: a status line under the column (below its top, across its width), else the bar; a capsule above the
-  // column or beside it is no limit (SwimHR, 2026-11-23: a capsule at the top clipped its controls)
+  // column or beside it is no limit (a paper, 2026-11-23: a capsule at the top clipped its controls)
   const tTop = oy(t), tL = t.offsetLeft, tR = t.offsetLeft + t.offsetWidth;
   const under = [...s.querySelectorAll(".capsule")].filter((c) => shown(c) && getComputedStyle(c).visibility !== "hidden" && oy(c) > tTop + 200 && c.offsetLeft < tR && c.offsetLeft + c.offsetWidth > tL);
   const limit = Math.min(1000, ...under.map((c) => oy(c))) - 12;
@@ -9791,7 +9793,7 @@ function fitColumn(s) {
   for (const least of [96, 56]) for (const e of fits) {
     const over = flow() - limit; if (over <= 0) return;
     const h = e.offsetHeight; if (h <= least) continue;
-    // (cut between its rows, never through one: a row's letters are whole or scrolled away; MoiréLens' review, “tails cut”)
+    // (cut between its rows, never through one: a row's letters are whole or scrolled away; a paper's review, “tails cut”)
     let want = Math.max(least, Math.floor(h - over)); const top = oy(e), pb = parseFloat(getComputedStyle(e).paddingBottom) || 0;
     const ends = [...e.children].filter(shown).map((c) => oy(c) + c.offsetHeight - top).filter((b) => b + pb <= want);
     if (ends.length) want = Math.max(least, Math.ceil(Math.max(...ends) + pb));
@@ -9809,7 +9811,7 @@ function fitIfChanged(s) {
 }
 { let fitT = 0, busy = false;
   // a fit changes the column's size, which the observer sees: its own changes are not answered (no loop), and only a fold or a
-  // control the reader opens is fitted at once (WindDancer, 2026-11-23: an observer answering itself kept a page from starting)
+  // control the reader opens is fitted at once (a paper, 2026-11-23: an observer answering itself kept a page from starting)
   const fit = () => { if (busy) return; busy = true; try { fitColumn(slides[cur]); } catch (e) {} requestAnimationFrame(() => requestAnimationFrame(() => { busy = false; })); };
   const later = () => { clearTimeout(fitT); fitT = setTimeout(fit, 30); };
   const now = () => { fit(); later(); };
@@ -9823,6 +9825,10 @@ function guideRing(s) {
   let ring = s.querySelector(":scope > .guide-ring");
   if (!ring) { ring = document.createElement("div"); ring.className = "guide-ring"; ring.setAttribute("aria-hidden", "true"); s.appendChild(ring); }
   const li = g.querySelector("li.now"), at = li ? li.dataset.at : "";
+  // the step asked for is in sight in its column: a column that scrolls (fitColumn) is scrolled to it, so its ring is
+  // never drawn round a place the column hides (the owner, 2026-11-28: “经常会有这种空的3的问题”)
+  if (li) { const sc = li.closest(".fitscroll"); if (sc) { const lr = li.getBoundingClientRect(), cr = sc.getBoundingClientRect(), k = cr.height / (sc.offsetHeight || 1) || 1;
+    if (lr.bottom > cr.bottom) sc.scrollTop += (lr.bottom - cr.bottom) / k + 8; else if (lr.top < cr.top) sc.scrollTop -= (cr.top - lr.top) / k + 8; } }
   // a line asking the reader to drag rings the subject only until they have (the user, 2026-11-15: “这个框，drag了之后就不要了”)
   const done = li && li.dataset.until === "drag" && typeof SIMS !== "undefined" && SIMS[s.id] && SIMS[s.id].dragged;
   // a line whose at is "cue" asks the reader to act on the scene's subject: the subject's own pulsing pill, which
@@ -10292,7 +10298,10 @@ stage.addEventListener("pointerdown", (e) => { const p = here(); if (p.down) p.d
 stage.addEventListener("pointermove", (e) => { const p = here(); if (p.move) p.move(e); });
 const pageUp = (e) => { const p = here(); if (p.up) p.up(e); };
 stage.addEventListener("pointerup", pageUp); stage.addEventListener("pointercancel", pageUp);
-stage.addEventListener("wheel", (e) => { const p = here(); if (p.wheel) p.wheel(e); }, { passive: false });
+// (the wheel over the text column scrolls the column alone, never the scene beside it: the owner, 2026-11-28, “open
+// exploration里面的滚轮，我很难控制，因为他会和右边的interactive demo里的滚轮冲突”)
+const inColumn = (e) => !!(e.target && e.target.closest && e.target.closest(".slide > .text, .only > .text"));
+stage.addEventListener("wheel", (e) => { if (inColumn(e)) return; const p = here(); if (p.wheel) p.wheel(e); }, { passive: false });
 // ================================================================ Level 3's table of the explorations
 // (the user, 2026-11-12) Exploration mode: a table of the explorations; each one returns to it when it ends (js/deck.js,
 // forward and back) and is ticked there once opened. On an exploration the table is ☰ in the corner: a click opens
@@ -10468,7 +10477,7 @@ for (const pv of document.querySelectorAll(".about .abpv:not([data-live])")) {
     if (c.width === bw * 2 && c.height === bh * 2 && c.parentNode === pv) return;
     c.width = bw * 2; c.height = bh * 2;
     const g = c.getContext("2d", { willReadFrequently: true }), k = Math.max(c.width / img.naturalWidth, c.height / img.naturalHeight); // cover, centred
-    g.imageSmoothingQuality = "high"; const right = !!pv.closest('[data-about="assets"]'); /* (the 3D assets' picture keeps its right edge, where its count stands: WindDancer's review, “23(”) */ g.drawImage(img, right ? c.width - img.naturalWidth * k : (c.width - img.naturalWidth * k) / 2, (c.height - img.naturalHeight * k) / 2, img.naturalWidth * k, img.naturalHeight * k);
+    g.imageSmoothingQuality = "high"; const right = !!pv.closest('[data-about="assets"]'); /* (the 3D assets' picture keeps its right edge, where its count stands: a paper's review, “23(”) */ g.drawImage(img, right ? c.width - img.naturalWidth * k : (c.width - img.naturalWidth * k) / 2, (c.height - img.naturalHeight * k) / 2, img.naturalWidth * k, img.naturalHeight * k);
     img.hidden = true; if (c.parentNode !== pv) pv.append(c);
   };
   aboutPics.push(paint);
@@ -11233,7 +11242,7 @@ stage.addEventListener("pointermove", (e) => {
 const endSimDrag = () => { const st = simHere(); if (st && st.drag) { st.drag = null; stage.classList.remove("grabbing"); } };
 stage.addEventListener("pointerup", endSimDrag); stage.addEventListener("pointercancel", endSimDrag);
 stage.addEventListener("wheel", (e) => {
-  const st = simHere(); if (!st) return; e.preventDefault();
+  const st = simHere(); if (!st) return; if (e.target && e.target.closest && e.target.closest(".slide > .text, .only > .text")) return; e.preventDefault(); // (the column scrolls)
   setRest(st, SIM_MODEL.nudge(st, e.deltaY > 0 ? 1 : -1, e.shiftKey, PAGES[st.id].drag));
 }, { passive: false });
 // A control's value in words, by its output's data-fmt: {v} the value,
@@ -12238,7 +12247,7 @@ function readerUse(id) {
 // free thing's page has none here (the hand already turns it, js/free.js)
 const GEST_DOFS = ["turn"];
 const gestDofs = (id) => (freeOf(id) ? [] : GEST_DOFS);
-// a handle with camera: false is the mouse's alone (alpha.85; MoiréWidgets, the owner's “camera mode keeps only the slider”): the
+// a handle with camera: false is the mouse's alone (alpha.85; a paper, the owner's “camera mode keeps only the slider”): the
 // hand neither turns it nor is told it can
 const camHandle = (h, id) => gestDofs(id).includes(h.dof) && h.camera !== false;
 const gestOf = (id) => !!(PAGES[id] && SIMS[id] && (PAGES[id].handles || []).some((h) => camHandle(h, id)));
@@ -12677,7 +12686,7 @@ function frame(now) {
   }
   if (page.ro) syncReadouts(s, page, ctx);
   sawFit(s); // the figure under the page's result box (js/deck.js)
-  try { fitIfChanged(s); } catch (e) {} // the text column kept above its status line, looked at every frame and fitted when it changed, so a still is the same whenever it is taken (js/deck.js; MoiréLens' s3.5 differed between loads; VECTOR's c3 slowed by a fit every frame)
+  try { fitIfChanged(s); } catch (e) {} // the text column kept above its status line, looked at every frame and fitted when it changed, so a still is the same whenever it is taken (js/deck.js; a paper's s3.5 differed between loads; a paper's c3 slowed by a fit every frame)
   if (page.status) { const el = s.querySelector(".capsule .ph"), txt = page.status(ctx); if (el && el.textContent !== txt) el.textContent = txt; }
   if (page.tick) page.tick(ctx);
   lightTick(); // the band's windows laid again when one appears (js/focus.js)
@@ -12710,7 +12719,7 @@ const FB_H2C = "https://cdn.jsdelivr.net/npm/html2canvas-pro@1.5.8/dist/html2can
 const PAGE_THUMBS = {"about":"thumbs/about.jpg","all":"thumbs/all.jpg","c1":"thumbs/c1.jpg","c2":"thumbs/c2.jpg","demo":"thumbs/demo.jpg","exp-ablation":"thumbs/exp-ablation.jpg","exp-array":"thumbs/exp-array.jpg","exp-general":"thumbs/exp-general.jpg","exp-kg":"thumbs/exp-kg.jpg","exp-kg2":"thumbs/exp-kg2.jpg","exp-physics":"thumbs/exp-physics.jpg","exp-related":"thumbs/exp-related.jpg","exp-world":"thumbs/exp-world.jpg","explore":"thumbs/explore.jpg","gap":"thumbs/gap.jpg","how":"thumbs/how.jpg","idea":"thumbs/idea.jpg","inuse":"thumbs/inuse.jpg","level-1":"thumbs/level-1.jpg","motivation":"thumbs/motivation.jpg","open":"thumbs/open.jpg","s1":"thumbs/s1.jpg","s2":"thumbs/s2.jpg","see":"thumbs/see.jpg","sense2sim":"thumbs/sense2sim.jpg","sim-real":"thumbs/sim-real.jpg","start-2":"thumbs/start-2.jpg","start":"thumbs/start.jpg","terms":"thumbs/terms.jpg","title":"thumbs/title.jpg","use":"thumbs/use.jpg","who":"thumbs/who.jpg"};
 // what each answer says it came from: the simulation (its repository's name, Sense2Sim-<paper>), the kit's version and
 // the kind of reader (as picked on the first page, or the default kind marked "not picked"); tools/site.mjs fills S2S_SITE
-const S2S_SITE = {"name":"Sense2Sim-WindDancer","kit":"6.0.0-alpha.85","title":"WindDancer: Understanding Acoustic Sensing under Ambient Airflow","url":"https://ambient-intelligence-lab-umich-eecs.github.io/Sense2Sim-WindDancer/","build":"20261124T043948","opening":true};
+const S2S_SITE = {"name":"Sense2Sim-WindDancer","kit":"6.0.0-alpha.85","title":"WindDancer: Understanding Acoustic Sensing under Ambient Airflow","url":"https://ambient-intelligence-lab-umich-eecs.github.io/Sense2Sim-WindDancer/","build":"20261128T173904","opening":true};
 const s2sSite = () => S2S_SITE.name || (location.pathname.match(/\/(Sense2Sim-[^/]+)\//) || [])[1] || document.title;
 const s2sKit = () => S2S_SITE.kit || "";
 // A reader never works on an older page than the site's (the owner, 2026-11-22: “每次进入强制刷新浏览器缓存”): as the page
@@ -13858,7 +13867,7 @@ const AU_FONT = (typeof document !== "undefined" && getComputedStyle(document.do
   // 存在没有rate就往下一页跳的情况”): with its card open, the card shakes; without, the card comes, and goes there once scored
   // (a page whose clip still waits at its set-up has not ended: the clip plays first, then the card comes. Before, a way off
   // brought the card while the clip waited, and → then played the clip or brought the card by how far the clip had got:
-  // MoiréLens's and Seismo's study walks failed at a different step each run)
+  // a paper's and a paper's study walks failed at a different step each run)
   const owes = () => on() && !done() && rateable().some((p) => p.i === cur) && (isExp() || (step >= stepsOf(slides[cur]) && !held()));
   const go0 = go; go = function (i, s) {
     if (introOpen && i !== cur) return void nudgeIntro();
